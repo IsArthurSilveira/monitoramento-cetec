@@ -3,12 +3,12 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 // URL do Apps Script do Google Sheets
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzvUAoQISzqv0KCj5lTdW9Hz3BBsa3r4xBF4nayAqjO9mtxdZMZYNx-4-P4IVylxc6A/exec';
 
-// Cache temporário em memória (efêmero por instância de Serverless Function)
+// Cache em memória (efêmero por instância de Serverless Function)
 const cache = new Map<string, { data: any; timestamp: number }>();
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutos de cache
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // Configuração dos cabeçalhos CORS
+  // Cabeçalhos de CORS para evitar problemas de domínios cruzados
   res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
@@ -44,11 +44,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       if (!forceRefresh && cache.has(cacheKey)) {
         const cached = cache.get(cacheKey)!;
         if (now - cached.timestamp < CACHE_DURATION) {
+          console.log(`[Vercel Serverless Cache Hit] key: ${cacheKey}`);
           return res.status(200).json(cached.data);
         }
       }
 
       const targetUrl = cleanParams.toString() ? `${APPS_SCRIPT_URL}?${cleanParams.toString()}` : APPS_SCRIPT_URL;
+      console.log(`[Vercel Serverless GET] Fetching from Apps Script: ${targetUrl}`);
 
       const response = await fetch(targetUrl);
       if (!response.ok) {
@@ -56,7 +58,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
       const data = await response.json();
 
-      // Salva no cache da função
+      // Atualiza o cache em memória
       cache.set(cacheKey, { data, timestamp: now });
 
       return res.status(200).json(data);
@@ -68,6 +70,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   if (method === 'POST') {
     try {
+      console.log(`[Vercel Serverless POST] Submitting payload`);
       const response = await fetch(APPS_SCRIPT_URL, {
         method: "POST",
         headers: {

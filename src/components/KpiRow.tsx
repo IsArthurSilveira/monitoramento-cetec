@@ -48,6 +48,8 @@ export default function KpiRow({ utecs }: KpiRowProps) {
       textColor: 'text-blue-600 dark:text-blue-400',
       borderColor: 'border-blue-500 dark:border-blue-500',
       bgColor: 'bg-blue-50 dark:bg-blue-950/30',
+      cardBg: 'bg-blue-50/25 dark:bg-blue-950/15 hover:bg-blue-50/45 dark:hover:bg-blue-950/20',
+      cardBorder: 'border-blue-200/90 dark:border-blue-900/60',
       icon: Building2,
       progress: Math.min(100, (finalUnidades / (activeListCount * 30 || 1)) * 100),
       progressColor: 'bg-blue-600 dark:bg-blue-500',
@@ -59,6 +61,8 @@ export default function KpiRow({ utecs }: KpiRowProps) {
       textColor: 'text-violet-600 dark:text-violet-400',
       borderColor: 'border-violet-500 dark:border-violet-500',
       bgColor: 'bg-violet-50 dark:bg-violet-950/30',
+      cardBg: 'bg-violet-50/25 dark:bg-violet-950/15 hover:bg-violet-50/45 dark:hover:bg-violet-950/20',
+      cardBorder: 'border-violet-200/90 dark:border-violet-900/60',
       icon: Users,
       progress: 100,
       progressColor: 'bg-violet-600 dark:bg-violet-500',
@@ -66,10 +70,12 @@ export default function KpiRow({ utecs }: KpiRowProps) {
     {
       title: 'LAB LCT',
       value: finalLct.toString(),
-      subtext: `${finalUnidades > 0 ? Math.round((finalLct / finalUnidades) * 100) : 0}% cob.`,
+      subtext: 'Laboratórios',
       textColor: 'text-emerald-600 dark:text-emerald-400',
       borderColor: 'border-emerald-500 dark:border-emerald-500',
       bgColor: 'bg-emerald-50 dark:bg-emerald-950/30',
+      cardBg: 'bg-emerald-50/25 dark:bg-emerald-950/15 hover:bg-emerald-50/45 dark:hover:bg-emerald-950/20',
+      cardBorder: 'border-emerald-200/90 dark:border-emerald-900/60',
       icon: GraduationCap,
       progress: finalUnidades > 0 ? (finalLct / finalUnidades) * 100 : 0,
       progressColor: 'bg-emerald-600 dark:bg-emerald-500',
@@ -77,10 +83,12 @@ export default function KpiRow({ utecs }: KpiRowProps) {
     {
       title: 'ROBÓTICA',
       value: finalRob.toString(),
-      subtext: `${finalUnidades > 0 ? Math.round((finalRob / finalUnidades) * 100) : 0}% cob.`,
+      subtext: 'Clubes de Robótica',
       textColor: 'text-amber-500 dark:text-amber-400',
       borderColor: 'border-amber-500 dark:border-amber-500',
       bgColor: 'bg-amber-50 dark:bg-amber-950/30',
+      cardBg: 'bg-amber-50/30 dark:bg-amber-950/15 hover:bg-amber-50/50 dark:hover:bg-amber-950/20',
+      cardBorder: 'border-amber-300/80 dark:border-amber-900/60',
       icon: Cpu,
       progress: finalUnidades > 0 ? (finalRob / finalUnidades) * 100 : 0,
       progressColor: 'bg-amber-500 dark:bg-amber-400',
@@ -88,10 +96,12 @@ export default function KpiRow({ utecs }: KpiRowProps) {
     {
       title: 'CINECLUBE',
       value: finalCine.toString(),
-      subtext: `${finalUnidades > 0 ? Math.round((finalCine / finalUnidades) * 100) : 0}% cob.`,
+      subtext: 'Clubes de cinema',
       textColor: 'text-pink-600 dark:text-pink-400',
       borderColor: 'border-pink-500 dark:border-pink-500',
       bgColor: 'bg-pink-50 dark:bg-pink-950/30',
+      cardBg: 'bg-pink-50/25 dark:bg-pink-950/15 hover:bg-pink-50/45 dark:hover:bg-pink-950/20',
+      cardBorder: 'border-pink-200/90 dark:border-pink-900/60',
       icon: Film,
       progress: finalUnidades > 0 ? (finalCine / finalUnidades) * 100 : 0,
       progressColor: 'bg-pink-600 dark:bg-pink-500',
@@ -99,10 +109,12 @@ export default function KpiRow({ utecs }: KpiRowProps) {
     {
       title: 'FORMAÇÃO EFEC. DIG.',
       value: finalFcd.toString(),
-      subtext: `${finalUnidades > 0 ? Math.round((finalFcd / finalUnidades) * 100) : 0}% cob.`,
+      subtext: 'Formações digitais',
       textColor: 'text-teal-600 dark:text-teal-400',
       borderColor: 'border-teal-500 dark:border-teal-500',
       bgColor: 'bg-teal-50 dark:bg-teal-950/30',
+      cardBg: 'bg-teal-50/25 dark:bg-teal-950/15 hover:bg-teal-50/45 dark:hover:bg-teal-950/20',
+      cardBorder: 'border-teal-200/90 dark:border-teal-900/60',
       icon: BookOpen,
       progress: finalUnidades > 0 ? (finalFcd / finalUnidades) * 100 : 0,
       progressColor: 'bg-teal-600 dark:bg-teal-500',
@@ -110,10 +122,12 @@ export default function KpiRow({ utecs }: KpiRowProps) {
     {
       title: 'PREMIADOS',
       value: finalRev.toString(),
-      subtext: `${finalUnidades > 0 ? ((finalRev / finalUnidades) * 100).toFixed(1) : '0.0'}% taxa`,
+      subtext: 'Escolas destaques (2025)',
       textColor: 'text-amber-600 dark:text-amber-500',
       borderColor: 'border-amber-500 dark:border-amber-500',
       bgColor: 'bg-amber-50/70 dark:bg-amber-950/20',
+      cardBg: 'bg-amber-50/25 dark:bg-amber-950/15 hover:bg-amber-50/45 dark:hover:bg-amber-950/20',
+      cardBorder: 'border-amber-200/90 dark:border-amber-900/60',
       icon: Trophy,
       progress: finalUnidades > 0 ? (finalRev / finalUnidades) * 100 * 5 : 0,
       progressColor: 'bg-amber-600 dark:bg-amber-500',
@@ -128,10 +142,10 @@ export default function KpiRow({ utecs }: KpiRowProps) {
           <div
             id={`kpi-card-${index}`}
             key={kpi.title}
-            className={`flex flex-col justify-between p-4 bg-white dark:bg-[#111827] rounded-xl shadow-xs border border-slate-100 dark:border-slate-800 hover:shadow-md transition-all duration-300 transform hover:-translate-y-0.5`}
+            className={`flex flex-col justify-between p-4 ${kpi.cardBg} rounded-xl shadow-xs border ${kpi.cardBorder} hover:shadow-md transition-all duration-300 transform hover:-translate-y-0.5`}
           >
             <div className="flex items-start justify-between gap-1.5">
-              <span className="text-[10px] font-black tracking-wider text-slate-400 dark:text-slate-500 uppercase truncate">
+              <span className="text-[10px] font-semibold tracking-wider text-slate-400 dark:text-slate-500 uppercase truncate">
                 {kpi.title}
               </span>
               <div className={`p-1.5 rounded-lg ${kpi.bgColor} ${kpi.textColor} flex-shrink-0`}>
@@ -140,10 +154,10 @@ export default function KpiRow({ utecs }: KpiRowProps) {
             </div>
             
             <div className="mt-3 flex-1 flex flex-col justify-end">
-              <h3 className="text-xl md:text-2xl font-black tracking-tight text-slate-800 dark:text-slate-100 leading-none">
+              <h3 className="text-xl md:text-2xl font-semibold tracking-tight text-slate-800 dark:text-slate-100 leading-none">
                 {kpi.value}
               </h3>
-              <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold mt-1 whitespace-nowrap">
+              <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium mt-1 whitespace-nowrap">
                 {kpi.subtext}
               </p>
 
@@ -152,7 +166,7 @@ export default function KpiRow({ utecs }: KpiRowProps) {
                 <div className="w-full h-1 bg-slate-100 dark:bg-slate-800/80 rounded-full overflow-hidden">
                   <div 
                     className={`h-full rounded-full transition-all duration-500 ${kpi.progressColor}`} 
-                    style={{ width: `${Math.min(100, Math.max(0, kpi.progress))}%` }}
+                    style={{ width: '100%' }}
                   />
                 </div>
               </div>

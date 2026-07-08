@@ -33,43 +33,52 @@ export default function DiaryCharts({
       {/* Chart 1: Distribuição de Planejamentos por UTEC */}
       <div className="bg-white dark:bg-[#111827] border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-3xs space-y-3">
         <div>
-          <h3 className="text-xs font-black text-slate-800 dark:text-white tracking-tight flex items-center gap-1.5 uppercase">
+          <h3 className="text-xs font-semibold text-slate-800 dark:text-white tracking-tight flex items-center gap-1.5 uppercase">
             <TrendingUp className="w-4 h-4 text-blue-600" />
             Planejamentos por UTEC de Suporte
           </h3>
           <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold">
-            Total acumulado de diários preenchidos agrupados por UTEC
+            Total acumulado de diários agrupados por UTEC • Arraste para o lado para ver todos
           </p>
         </div>
 
-        <div className="h-[220px] w-full">
-          {chartPlanejamentosPorUtec.length > 0 ? (
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={chartPlanejamentosPorUtec} margin={{ top: 10, right: 10, left: -25, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" className="opacity-40" />
-                <XAxis dataKey="name" tick={{ fontSize: 9, fontWeight: '700', fill: '#64748B' }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 9, fontWeight: '600', fill: '#64748B' }} axisLine={false} tickLine={false} allowDecimals={false} />
-                <Tooltip cursor={{ fill: 'rgba(59, 130, 246, 0.04)' }} contentStyle={{ fontSize: '11px', background: '#0F172A', color: '#FFF', borderRadius: '8px' }} />
-                <Bar dataKey="value" fill="#3B82F6" radius={[4, 4, 0, 0]} maxBarSize={28}>
-                  {chartPlanejamentosPorUtec.map((entry, index) => {
-                    const colors = ['#2563EB', '#3B82F6', '#60A5FA', '#93C5FD', '#BFDBFE'];
-                    return <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />;
-                  })}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          ) : (
-            <div className="w-full h-full flex flex-col items-center justify-center text-slate-400 border border-dashed border-slate-200 dark:border-slate-800 rounded-xl">
-              <span className="text-[10px] font-black uppercase">Sem dados</span>
-            </div>
-          )}
+        <div className="w-full overflow-x-auto pb-2 pr-1 scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-slate-800 scrollbar-track-transparent" id="diary-utec-chart-scroll-wrapper">
+          <div style={{ width: '1000px', height: '220px' }} id="diary-utec-chart-scroll-content">
+            {chartPlanejamentosPorUtec.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={chartPlanejamentosPorUtec} margin={{ top: 10, right: 10, left: -25, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" className="opacity-40" />
+                  <XAxis 
+                    dataKey="name" 
+                    tick={{ fontSize: 9, fontWeight: '700', fill: '#64748B' }} 
+                    axisLine={false} 
+                    tickLine={false} 
+                    interval={0}
+                    tickFormatter={(val) => val.replace('UTEC ', '')}
+                  />
+                  <YAxis tick={{ fontSize: 9, fontWeight: '600', fill: '#64748B' }} axisLine={false} tickLine={false} allowDecimals={false} />
+                  <Tooltip cursor={{ fill: 'rgba(59, 130, 246, 0.04)' }} contentStyle={{ fontSize: '11px', background: '#0F172A', color: '#FFF', borderRadius: '8px' }} />
+                  <Bar dataKey="value" fill="#3B82F6" radius={[4, 4, 0, 0]} maxBarSize={28}>
+                    {chartPlanejamentosPorUtec.map((entry, index) => {
+                      const colors = ['#2563EB', '#3B82F6', '#60A5FA', '#93C5FD', '#BFDBFE'];
+                      return <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />;
+                    })}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="w-full h-full flex flex-col items-center justify-center text-slate-400 border border-dashed border-slate-200 dark:border-slate-800 rounded-xl">
+                <span className="text-[10px] font-semibold uppercase">Sem dados</span>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
       {/* Chart 2: Categoria de Diário (Donut) */}
       <div className="bg-white dark:bg-[#111827] border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-3xs flex flex-col justify-between space-y-3">
         <div>
-          <h3 className="text-xs font-black text-slate-800 dark:text-white tracking-tight flex items-center gap-1.5 uppercase">
+          <h3 className="text-xs font-semibold text-slate-800 dark:text-white tracking-tight flex items-center gap-1.5 uppercase">
             <CheckCircle2 className="w-4 h-4 text-purple-600" />
             Atividades por Categorias
           </h3>
@@ -104,7 +113,7 @@ export default function DiaryCharts({
             )}
 
             <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center">
-              <span className="text-lg font-black text-slate-800 dark:text-slate-100 leading-none">{totalCategoriasCount}</span>
+              <span className="text-lg font-semibold text-slate-800 dark:text-slate-100 leading-none">{totalCategoriasCount}</span>
               <span className="text-[8px] font-bold text-slate-400 dark:text-slate-500 uppercase mt-0.5">Ações</span>
             </div>
           </div>
@@ -118,7 +127,7 @@ export default function DiaryCharts({
                     <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: item.color }} />
                     <span className="text-slate-600 dark:text-slate-400 truncate text-[10px]">{item.name}</span>
                   </div>
-                  <span className="text-slate-500 font-mono text-[10px] font-black">{percentage}%</span>
+                  <span className="text-slate-500 font-mono text-[10px] font-semibold">{percentage}%</span>
                 </div>
               );
             })}
@@ -129,7 +138,7 @@ export default function DiaryCharts({
       {/* Chart 3: Top 8 Escolas em Preenchimento */}
       <div className="bg-white dark:bg-[#111827] border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-3xs space-y-3">
         <div>
-          <h3 className="text-xs font-black text-slate-800 dark:text-white tracking-tight flex items-center gap-1.5 uppercase">
+          <h3 className="text-xs font-semibold text-slate-800 dark:text-white tracking-tight flex items-center gap-1.5 uppercase">
             <Building2 className="w-4 h-4 text-emerald-600" />
             Unidades de Ensino Mais Atendidas (TOP 8)
           </h3>
@@ -168,7 +177,7 @@ export default function DiaryCharts({
       {/* Chart 4: Top 5 Professores com Atividades */}
       <div className="bg-white dark:bg-[#111827] border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-3xs space-y-3">
         <div>
-          <h3 className="text-xs font-black text-slate-800 dark:text-white tracking-tight flex items-center gap-1.5 uppercase">
+          <h3 className="text-xs font-semibold text-slate-800 dark:text-white tracking-tight flex items-center gap-1.5 uppercase">
             <Users className="w-4 h-4 text-pink-600" />
             Desempenho dos Multiplicadores (TOP 5)
           </h3>

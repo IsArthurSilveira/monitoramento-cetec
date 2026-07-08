@@ -15,7 +15,7 @@ import DiaryFilters from './DiaryFilters';
 import DiaryDetailModal from './DiaryDetailModal';
 import DiaryCharts from './DiaryCharts';
 import { UtecMetric, DiaryRecord } from '../types';
-import { INITIAL_EDUCATIONAL_UNITS } from '../data';
+import { INITIAL_EDUCATIONAL_UNITS, INITIAL_UTECS } from '../data';
 
 interface MultiplierDiaryProps {
   utecs: UtecMetric[];
@@ -29,50 +29,128 @@ interface MultiplierDiaryProps {
 
 // Map spreadsheet groups to our supported UTEC IDs & Names dynamically
 const mapGroupToUtec = (grupoStr: string) => {
-  const normalized = String(grupoStr || "").toUpperCase();
-  if (normalized.includes("BOTANICO") || normalized.includes("JARDIM")) {
-    return { id: "utec-2", name: "UTEC JARDIM BOTANICO" };
-  }
-  if (normalized.includes("BOA VIAGEM")) {
+  const clean = (s: string) => {
+    return String(s || "")
+      .toUpperCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "") // remove accents
+      .replace(/[^A-Z0-9]/g, " ")      // replace symbols with spaces
+      .replace(/\s+/g, " ")             // squash spaces
+      .trim();
+  };
+
+  const cleanGrp = clean(grupoStr);
+  if (!cleanGrp) {
     return { id: "utec-1", name: "UTEC BOA VIAGEM" };
   }
-  if (normalized.includes("SITIO") || normalized.includes("TRINDADE")) {
+
+  // 1. Precise keyword rules for mapping
+  if (cleanGrp.includes("BOTANICO") || cleanGrp.includes("JARDIM")) {
+    return { id: "utec-2", name: "UTEC JARDIM BOTANICO" };
+  }
+  if (cleanGrp.includes("BOA VIAGEM") || cleanGrp.includes("VIAGEM")) {
+    return { id: "utec-1", name: "UTEC BOA VIAGEM" };
+  }
+  if (cleanGrp.includes("SITIO") || cleanGrp.includes("TRINDADE")) {
     return { id: "utec-3", name: "UTEC SITIO TRINDADE" };
   }
-  if (normalized.includes("SANTO AMARO")) {
+  if (cleanGrp.includes("SANTO AMARO") || cleanGrp.includes("AMARO")) {
     return { id: "utec-4", name: "UTEC SANTO AMARO" };
   }
-  if (normalized.includes("GREGORIO") || normalized.includes("BEZERRA")) {
+  if (cleanGrp.includes("GREGORIO") || cleanGrp.includes("BEZERRA")) {
     return { id: "utec-5", name: "UTEC GREGORIO BEZERRA" };
   }
-  if (normalized.includes("IBURA")) {
+  if (cleanGrp.includes("IBURA")) {
     return { id: "utec-6", name: "UTEC IBURA" };
   }
-  if (normalized.includes("ALTO SANTA") || normalized.includes("ALTO STA") || normalized.includes("TEREZINHA")) {
+  if (cleanGrp.includes("ALTO SANTA") || cleanGrp.includes("ALTO STA") || cleanGrp.includes("TEREZINHA") || cleanGrp.includes("SANTA TEREZINHA")) {
     return { id: "utec-7", name: "UTEC ALTO STA TEREZINHA" };
   }
-  if (normalized.includes("CAXANGÁ") || normalized.includes("CAXANGA")) {
+  if (cleanGrp.includes("CAXANGA")) {
     return { id: "utec-8", name: "UTEC CAXANGÁ" };
   }
-  if (normalized.includes("COQUE")) {
+  if (cleanGrp.includes("COQUE")) {
     return { id: "utec-9", name: "UTEC COQUE" };
   }
-  if (normalized.includes("CORDEIRO")) {
+  if (cleanGrp.includes("CORDEIRO")) {
     return { id: "utec-10", name: "UTEC CORDEIRO" };
   }
-  if (normalized.includes("CRISTIANO") || normalized.includes("DONATO")) {
+  if (cleanGrp.includes("CRISTIANO") || cleanGrp.includes("DONATO")) {
     return { id: "utec-11", name: "UTEC CRISTIANO DONATO" };
   }
-  if (normalized.includes("LARGO") || normalized.includes("DOM LUIS") || normalized.includes("LUIS")) {
+  if (cleanGrp.includes("LARGO") || cleanGrp.includes("DOM LUIS") || cleanGrp.includes("DOM LUIZ") || cleanGrp.includes("LUIS") || cleanGrp.includes("LUIZ")) {
     return { id: "utec-12", name: "UTEC LARGO DOM LUIS" };
   }
-  if (normalized.includes("NOVA DESCOBERTA")) {
+  if (cleanGrp.includes("NOVA DESCOBERTA") || cleanGrp.includes("DESCOBERTA")) {
     return { id: "utec-13", name: "UTEC NOVA DESCOBERTA" };
   }
-  if (normalized.includes("PINA")) {
+  if (cleanGrp.includes("PINA")) {
     return { id: "utec-14", name: "UTEC PINA" };
   }
-  return { id: "utec-1", name: "UTEC BOA VIAGEM" }; // Standard fallback
+
+  // 2. Dynamic lookup fallback against INITIAL_UTECS
+  const areUtecsMatching = (uName1: string, uName2: string) => {
+    const n1 = clean(uName1);
+    const n2 = clean(uName2);
+    if (!n1 || !n2) return false;
+    if (n1 === n2 || n1.includes(n2) || n2.includes(n1)) return true;
+    
+    const keywords = [
+      { keys: ["BOTANICO", "JARDIM"], matches: ["BOTANICO", "JARDIM"] },
+      { keys: ["BOA VIAGEM", "VIAGEM"], matches: ["BOA VIAGEM", "VIAGEM"] },
+      { keys: ["TRINDADE", "SITIO"], matches: ["TRINDADE", "SITIO"] },
+      { keys: ["SANTO AMARO", "AMARO"], matches: ["SANTO AMARO", "AMARO"] },
+      { keys: ["GREGORIO", "BEZERRA"], matches: ["GREGORIO", "BEZERRA"] },
+      { keys: ["IBURA"], matches: ["IBURA"] },
+      { keys: ["TEREZINHA", "ALTO SANTA", "ALTO STA"], matches: ["TEREZINHA", "ALTO SANTA", "ALTO STA"] },
+      { keys: ["CAXANGA"], matches: ["CAXANGA"] },
+      { keys: ["COQUE"], matches: ["COQUE"] },
+      { keys: ["CORDEIRO"], matches: ["CORDEIRO"] },
+      { keys: ["CRISTIANO", "DONATO"], matches: ["CRISTIANO", "DONATO"] },
+      { keys: ["LARGO", "DOM LUIS", "LUIS"], matches: ["LARGO", "DOM LUIS", "LUIS", "LUIZ"] },
+      { keys: ["NOVA DESCOBERTA", "DESCOBERTA"], matches: ["NOVA DESCOBERTA", "DESCOBERTA"] },
+      { keys: ["PINA"], matches: ["PINA"] }
+    ];
+
+    for (const kw of keywords) {
+      const anyKey1 = kw.keys.some(k => n1.includes(k));
+      const anyKey2 = kw.matches.some(m => n2.includes(m));
+      if (anyKey1 && anyKey2) return true;
+    }
+    return false;
+  };
+
+  for (const utec of INITIAL_UTECS) {
+    if (areUtecsMatching(utec.name, cleanGrp) || areUtecsMatching(cleanGrp, utec.name)) {
+      return { id: utec.id, name: utec.name };
+    }
+  }
+
+  return { id: "utec-1", name: "UTEC BOA VIAGEM" }; // Fallback
+};
+
+// Normalize category names to our 4 official categories robustly
+const normalizeCategory = (catStr: string): string => {
+  const s = String(catStr || "").toUpperCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "") // remove accents
+    .trim();
+
+  if (s.includes("EXPEDIENTE") || s.includes("INTERNO") || s.includes("SEDE") || s.includes("ADMINISTRATIVO")) {
+    return "Diário - Expediente na UTEC";
+  }
+  if (s.includes("EVENTO") || s.includes("EXTERNO") || s.includes("PALESTRA") || s.includes("FORA")) {
+    return "Diário - Eventos Externos";
+  }
+  if (s.includes("CLUBE") || s.includes("PROJETO") || s.includes("ROBOTICA") || s.includes("OFICINA")) {
+    return "Diário - Clubes e Projetos";
+  }
+  if (s.includes("REDS") || s.includes("ORIENTACAO") || s.includes("SUPORTE") || s.includes("ESCOLA") || s.includes("ATENDIMENTO") || s.includes("ASSISTENCIA")) {
+    return "Diário - Orientação REDS";
+  }
+
+  // Fallback
+  return "Diário - Orientação REDS";
 };
 
 // Find matching school INEP code from internal catalog
@@ -88,8 +166,45 @@ const findInep = (schoolName: string): string => {
 
 // Parse Month Name for filter consistency
 const determineMonth = (dateStr: string): string => {
-  if (String(dateStr).includes("/02/")) return "fev. de 2026";
-  return "mar. de 2026";
+  const str = String(dateStr || "").trim();
+  if (!str) return "mar. de 2026"; // Fallback
+
+  // 1. Try to match ISO format like YYYY-MM-DD (e.g. 2026-03-17 or 2026-3-17)
+  const isoMatch = str.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})/);
+  if (isoMatch) {
+    const monthNum = parseInt(isoMatch[2], 10);
+    const months = ["jan.", "fev.", "mar.", "abr.", "mai.", "jun.", "jul.", "ago.", "set.", "out.", "nov.", "dez."];
+    if (monthNum >= 1 && monthNum <= 12) {
+      return `${months[monthNum - 1]} de 2026`;
+    }
+  }
+
+  // 2. Try to match Brazilian format like DD/MM/YYYY or D/M/YYYY (e.g. 17/03/2026 or 17/3/2026)
+  const brMatch = str.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})/);
+  if (brMatch) {
+    const monthNum = parseInt(brMatch[2], 10);
+    const months = ["jan.", "fev.", "mar.", "abr.", "mai.", "jun.", "jul.", "ago.", "set.", "out.", "nov.", "dez."];
+    if (monthNum >= 1 && monthNum <= 12) {
+      return `${months[monthNum - 1]} de 2026`;
+    }
+  }
+
+  // 3. Fallback substrings
+  const lowerStr = str.toLowerCase();
+  if (lowerStr.includes("/01/") || lowerStr.includes("-01-") || lowerStr.includes("/1/") || lowerStr.includes("-1-")) return "jan. de 2026";
+  if (lowerStr.includes("/02/") || lowerStr.includes("-02-") || lowerStr.includes("/2/") || lowerStr.includes("-2-")) return "fev. de 2026";
+  if (lowerStr.includes("/03/") || lowerStr.includes("-03-") || lowerStr.includes("/3/") || lowerStr.includes("-3-")) return "mar. de 2026";
+  if (lowerStr.includes("/04/") || lowerStr.includes("-04-") || lowerStr.includes("/4/") || lowerStr.includes("-4-")) return "abr. de 2026";
+  if (lowerStr.includes("/05/") || lowerStr.includes("-05-") || lowerStr.includes("/5/") || lowerStr.includes("-5-")) return "mai. de 2026";
+  if (lowerStr.includes("/06/") || lowerStr.includes("-06-") || lowerStr.includes("/6/") || lowerStr.includes("-6-")) return "jun. de 2026";
+  if (lowerStr.includes("/07/") || lowerStr.includes("-07-") || lowerStr.includes("/7/") || lowerStr.includes("-7-")) return "jul. de 2026";
+  if (lowerStr.includes("/08/") || lowerStr.includes("-08-") || lowerStr.includes("/8/") || lowerStr.includes("-8-")) return "ago. de 2026";
+  if (lowerStr.includes("/09/") || lowerStr.includes("-09-") || lowerStr.includes("/9/") || lowerStr.includes("-9-")) return "set. de 2026";
+  if (lowerStr.includes("/10/") || lowerStr.includes("-10-")) return "out. de 2026";
+  if (lowerStr.includes("/11/") || lowerStr.includes("-11-")) return "nov. de 2026";
+  if (lowerStr.includes("/12/") || lowerStr.includes("-12-")) return "dez. de 2026";
+
+  return "mar. de 2026"; // Standard fallback
 };
 
 // Smart, robust value finder that tolerates accents, case, spaces, and underscores
@@ -171,13 +286,21 @@ const mapSpreadsheetRowToDiaryRecord = (r: any, idx: number): DiaryRecord => {
   const numEstudantes = parseCount(rawEstudantes);
   const numProfessores = parseCount(rawProfessores);
   
-  const categoria = String(getVal(["categoria", "categoriadeatendimento", "tipodeatendimento", "setor", "tipo_atendimento"], "Diário - Expediente na UTEC"));
+  const rawCategoria = String(getVal(["categoria", "categoriadeatendimento", "tipodeatendimento", "setor", "tipo_atendimento", "area_setor_categoria", "area"], "Diário - Expediente na UTEC"));
+  const categoria = normalizeCategory(rawCategoria);
   const unidade = String(getVal(["unidadedeensino", "nomedaunidadedeensino", "escolanome", "escola_nome", "escola", "unidade", "unidade_ensino"], "UTEC JARDIM BOTANICO"));
   const solicitante = String(getVal(["solicitante", "nomesolicitante", "nomedosolicitante", "nome", "multiplicador", "nome_solicitante"], "Renata Tavares da Silva"));
   const atendimentoTipo: 'Escola' | 'Externo/UTEC' = (categoria.includes("Expediente") || categoria.includes("Externo") || categoria === 'Diário - Expediente na UTEC') ? 'Externo/UTEC' : 'Escola';
 
   return {
-    id: String(getVal(["id", "protocolo", "id_registro", "key"]) || `rec-idx-${idx}`),
+    id: (() => {
+      const rawId = String(getVal(["id", "protocolo", "id_registro", "key"]) || "").trim();
+      const invalidIds = ["não encontrado", "não informado", "não se aplica", "n/a", "-", "null", "undefined", ""];
+      if (!rawId || invalidIds.includes(rawId.toLowerCase())) {
+        return `rec-idx-${idx}`;
+      }
+      return `${rawId}-${idx}`;
+    })(),
     dataOcorrencia,
     turno1: String(getVal(["turno1", "turno", "turnos"], "")),
     turno2: String(getVal(["turno2"], "")),
@@ -216,7 +339,7 @@ const mapSpreadsheetRowToDiaryRecord = (r: any, idx: number): DiaryRecord => {
     // Derived compatibility variables
     utecId: utecMapped.id,
     utecName: utecMapped.name,
-    escolaInep: findInep(unidade),
+    escolaInep: String(getVal(["codigo_inep_unidade", "unidade_de_ensino", "escola_inep", "inep", "codigo_inep"], findInep(unidade))),
     escolaNome: unidade,
     qtdProfessores: numProfessores > 0 ? numProfessores : '-',
     qtdEstudantes: numEstudantes > 0 ? numEstudantes : '-',
@@ -329,6 +452,8 @@ export default function MultiplierDiary({
   }, []);
 
   // Filter selections in UI
+  const [filterRegional, setFilterRegional] = useState<string>('Todas');
+  const [filterRpa, setFilterRpa] = useState<string>('Todas');
   const [filterUtecId, setFilterUtecId] = useState<string>('Todas');
   const [filterEscolaInep, setFilterEscolaInep] = useState<string>('Todas');
   const [filterCategory, setFilterCategory] = useState<string>('Todas');
@@ -340,6 +465,19 @@ export default function MultiplierDiary({
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [rowsPerPage, setRowsPerPage] = useState<number>(10);
 
+  // Smooth scroll back to table header when page changes
+  const isDiaryTableMounted = React.useRef(false);
+  useEffect(() => {
+    if (!isDiaryTableMounted.current) {
+      isDiaryTableMounted.current = true;
+      return;
+    }
+    const tableEl = document.getElementById('diary-raw-logs-table');
+    if (tableEl) {
+      tableEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [currentPage]);
+
   // Selected diary record for detailed overlay modal
   const [selectedRecordForModal, setSelectedRecordForModal] = useState<DiaryRecord | null>(null);
 
@@ -347,6 +485,21 @@ export default function MultiplierDiary({
   const uniqueMultipliers = useMemo(() => {
     const list = Array.from(new Set(diaryRecords.map(r => r.solicitante).filter(Boolean)));
     return list.sort();
+  }, [diaryRecords]);
+
+  const uniqueMonths = useMemo(() => {
+    const list = Array.from(new Set(diaryRecords.map(r => r.mes).filter(Boolean)));
+    return list.sort((a, b) => {
+      const monthsOrder = ["jan.", "fev.", "mar.", "abr.", "mai.", "jun.", "jul.", "ago.", "set.", "out.", "nov.", "dez."];
+      const aPrefix = String(a).split(" ")[0];
+      const bPrefix = String(b).split(" ")[0];
+      const aIdx = monthsOrder.indexOf(aPrefix);
+      const bIdx = monthsOrder.indexOf(bPrefix);
+      if (aIdx !== -1 && bIdx !== -1) {
+        return aIdx - bIdx;
+      }
+      return String(a).localeCompare(String(b));
+    });
   }, [diaryRecords]);
 
   const uniqueSchools = useMemo(() => {
@@ -362,6 +515,21 @@ export default function MultiplierDiary({
   // Derived filtered records for analysis
   const filteredRecords = useMemo(() => {
     return diaryRecords.filter(record => {
+      const recordUtec = utecs.find(u => u.id.toLowerCase() === record.utecId.toLowerCase());
+      
+      if (filterRegional !== 'Todas') {
+        const regional = recordUtec?.regional || '';
+        if (regional !== filterRegional) return false;
+      }
+      
+      if (filterRpa !== 'Todas') {
+        const rpa = recordUtec?.rpaSede || '';
+        const matchesRpa = rpa === filterRpa || 
+          `RPA ${rpa}` === filterRpa || 
+          rpa.toUpperCase() === filterRpa.toUpperCase();
+        if (!matchesRpa) return false;
+      }
+
       if (filterUtecId !== 'Todas' && record.utecId !== filterUtecId) return false;
       if (filterEscolaInep !== 'Todas' && record.escolaInep !== filterEscolaInep) return false;
       if (filterCategory !== 'Todas' && record.categoria !== filterCategory) return false;
@@ -369,7 +537,7 @@ export default function MultiplierDiary({
       if (filterSolicitante !== 'Todas' && record.solicitante !== filterSolicitante) return false;
       return true;
     });
-  }, [diaryRecords, filterUtecId, filterEscolaInep, filterCategory, filterMonth, filterSolicitante]);
+  }, [diaryRecords, utecs, filterRegional, filterRpa, filterUtecId, filterEscolaInep, filterCategory, filterMonth, filterSolicitante]);
 
   // Table search filtering
   const tableFilteredRecords = useMemo(() => {
@@ -397,18 +565,46 @@ export default function MultiplierDiary({
   // Reset page when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [tableSearch, filterUtecId, filterEscolaInep, filterCategory, filterMonth, filterSolicitante, rowsPerPage]);
+  }, [tableSearch, filterRegional, filterRpa, filterUtecId, filterEscolaInep, filterCategory, filterMonth, filterSolicitante, rowsPerPage]);
 
-  // Active schools list in filter dropdown (scoped to selected UTEC if applicable)
+  // Scoped list of UTECs based on selected Regional and RPA
+  const scopedUtecs = useMemo(() => {
+    return utecs.filter(u => {
+      const matchesRegional = filterRegional === 'Todas' || u.regional === filterRegional;
+      const utecRpa = u.rpaSede || "";
+      const matchesRpa = filterRpa === 'Todas' || 
+        utecRpa === filterRpa || 
+        `RPA ${utecRpa}` === filterRpa || 
+        utecRpa.toUpperCase() === filterRpa.toUpperCase();
+      return matchesRegional && matchesRpa;
+    });
+  }, [utecs, filterRegional, filterRpa]);
+
+  // Active schools list in filter dropdown (scoped to selected Regional, RPA and UTEC)
   const scopedFilterSchools = useMemo(() => {
-    if (filterUtecId === 'Todas') {
-      return uniqueSchools;
-    }
     return uniqueSchools.filter(school => {
       const parentUnit = INITIAL_EDUCATIONAL_UNITS.find(u => u.inep_escola === school.inep);
-      return parentUnit ? parentUnit.id_utec_suporte === filterUtecId : true;
+      if (!parentUnit) return true;
+      
+      // If a specific UTEC is filtered, filter school by that UTEC id
+      if (filterUtecId !== 'Todas') {
+        return parentUnit.id_utec_suporte === filterUtecId;
+      }
+      
+      // Otherwise, filter school by parent UTEC's regional and RPA if selected
+      const parentUtec = utecs.find(u => u.id.toLowerCase() === parentUnit.id_utec_suporte.toLowerCase());
+      if (!parentUtec) return true;
+      
+      const matchesRegional = filterRegional === 'Todas' || parentUtec.regional === filterRegional;
+      const utecRpa = parentUtec.rpaSede || "";
+      const matchesRpa = filterRpa === 'Todas' || 
+        utecRpa === filterRpa || 
+        `RPA ${utecRpa}` === filterRpa || 
+        utecRpa.toUpperCase() === filterRpa.toUpperCase();
+      
+      return matchesRegional && matchesRpa;
     });
-  }, [filterUtecId, uniqueSchools]);
+  }, [filterUtecId, uniqueSchools, utecs, filterRegional, filterRpa]);
 
   // KPIs Calculations
   const kpis = useMemo(() => {
@@ -445,15 +641,41 @@ export default function MultiplierDiary({
   // --- CHARTS CALCULATIONS ---
   const chartPlanejamentosPorUtec = useMemo(() => {
     const countMap: { [key: string]: number } = {};
-    filteredRecords.forEach(r => {
-      const name = r.utecName;
-      countMap[name] = (countMap[name] || 0) + 1;
+    
+    // Initialize all utecs in the prop to 0
+    utecs.forEach(u => {
+      countMap[String(u.id || "").toLowerCase().trim()] = 0;
     });
 
-    return utecs.map(u => ({
-      name: u.name.replace("UTEC ", ""),
-      value: countMap[u.name] || 0
-    })).sort((a, b) => b.value - a.value);
+    filteredRecords.forEach(r => {
+      const rId = String(r.utecId || "").toLowerCase().trim();
+      if (rId && countMap[rId] !== undefined) {
+        countMap[rId] += 1;
+      } else {
+        // Try finding by name robustly
+        const rNameClean = String(r.utecName || "").toUpperCase().trim();
+        const foundUtecByName = utecs.find(u => 
+          String(u.name || "").toUpperCase().trim() === rNameClean || 
+          String(u.name || "").toUpperCase().replace("UTEC ", "").trim() === rNameClean
+        );
+        if (foundUtecByName) {
+          const matchedId = String(foundUtecByName.id || "").toLowerCase().trim();
+          countMap[matchedId] = (countMap[matchedId] || 0) + 1;
+        } else if (utecs.length > 0) {
+          // Fallback to the first UTEC in the list to prevent number mismatch
+          const fallbackId = String(utecs[0].id || "").toLowerCase().trim();
+          countMap[fallbackId] = (countMap[fallbackId] || 0) + 1;
+        }
+      }
+    });
+
+    return utecs
+      .map(u => ({
+        name: u.name.replace("UTEC ", ""),
+        value: countMap[String(u.id || "").toLowerCase().trim()] || 0
+      }))
+      .filter(item => item.value > 0) // Only show active UTECs in the chart
+      .sort((a, b) => b.value - a.value);
   }, [filteredRecords, utecs]);
 
   const chartPreenchimentoPorEscola = useMemo(() => {
@@ -488,9 +710,17 @@ export default function MultiplierDiary({
   }, [filteredRecords]);
 
   const chartCategoriasPie = useMemo(() => {
-    const map: { [key: string]: number } = {};
+    const map: { [key: string]: number } = {
+      'Diário - Expediente na UTEC': 0,
+      'Diário - Eventos Externos': 0,
+      'Diário - Clubes e Projetos': 0,
+      'Diário - Orientação REDS': 0
+    };
+
     filteredRecords.forEach(r => {
-      map[r.categoria] = (map[r.categoria] || 0) + 1;
+      const rawCat = r.categoria || "";
+      const normCat = normalizeCategory(rawCat);
+      map[normCat] = (map[normCat] || 0) + 1;
     });
 
     return [
@@ -506,6 +736,8 @@ export default function MultiplierDiary({
   }, [chartCategoriasPie]);
 
   const anyFilterActive = 
+    filterRegional !== 'Todas' ||
+    filterRpa !== 'Todas' ||
     filterUtecId !== 'Todas' || 
     filterEscolaInep !== 'Todas' || 
     filterCategory !== 'Todas' || 
@@ -513,6 +745,8 @@ export default function MultiplierDiary({
     filterSolicitante !== 'Todas';
 
   const resetAllFilters = () => {
+    setFilterRegional('Todas');
+    setFilterRpa('Todas');
     setFilterUtecId('Todas');
     setFilterEscolaInep('Todas');
     setFilterCategory('Todas');
@@ -530,7 +764,7 @@ export default function MultiplierDiary({
       {showIntegrationPanel && (
         <div className="bg-slate-50 dark:bg-slate-900/40 rounded-xl p-5 border border-slate-200 dark:border-slate-800 space-y-3" id="diary-integration-panel">
           <div>
-            <h4 className="text-xs font-black uppercase text-slate-800 dark:text-slate-200 flex items-center gap-2">
+            <h4 className="text-xs font-semibold uppercase text-slate-800 dark:text-slate-200 flex items-center gap-2">
               Status Técnico da Conexão
             </h4>
             <p className="text-[11px] text-slate-500 mt-1">
@@ -554,6 +788,18 @@ export default function MultiplierDiary({
 
       {/* 3. Operational Filters Bar */}
       <DiaryFilters
+        filterRegional={filterRegional}
+        setFilterRegional={(reg) => {
+          setFilterRegional(reg);
+          setFilterUtecId('Todas');
+          setFilterEscolaInep('Todas');
+        }}
+        filterRpa={filterRpa}
+        setFilterRpa={(rpa) => {
+          setFilterRpa(rpa);
+          setFilterUtecId('Todas');
+          setFilterEscolaInep('Todas');
+        }}
         filterUtecId={filterUtecId}
         setFilterUtecId={(id) => {
           setFilterUtecId(id);
@@ -568,8 +814,10 @@ export default function MultiplierDiary({
         filterSolicitante={filterSolicitante}
         setFilterSolicitante={setFilterSolicitante}
         utecs={utecs}
+        scopedUtecs={scopedUtecs}
         scopedFilterSchools={scopedFilterSchools}
         uniqueMultipliers={uniqueMultipliers}
+        uniqueMonths={uniqueMonths}
         resetAllFilters={resetAllFilters}
         anyFilterActive={anyFilterActive}
       />
@@ -585,13 +833,13 @@ export default function MultiplierDiary({
 
       {/* 6. Live Records Table Grid */}
       <div className="bg-white dark:bg-[#111827] rounded-xl shadow-3xs border border-slate-200 dark:border-slate-800 overflow-hidden" id="diary-raw-logs-table">
-        <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/20 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div className="px-5 py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/20 flex flex-col sm:flex-row items-center justify-between gap-3">
           <div>
-            <h4 className="text-xs font-black uppercase text-slate-800 dark:text-white flex items-center gap-1.5">
+            <h4 className="text-xs font-semibold uppercase text-slate-800 dark:text-white flex items-center gap-1.5">
               <FileText className="w-4 h-4 text-blue-600" />
               Diários de Bordo & Ocorrências Registradas
             </h4>
-            <p className="text-[9px] text-slate-400 dark:text-slate-500 font-bold mt-0.5">
+            <p className="text-[9px] text-slate-400 dark:text-slate-500 font-medium mt-0.5">
               Clique em qualquer registro para visualizar a ficha de atendimento completa do servidor.
             </p>
           </div>
@@ -606,7 +854,7 @@ export default function MultiplierDiary({
                 placeholder="Procurar na tabela..."
                 value={tableSearch}
                 onChange={e => setTableSearch(e.target.value)}
-                className="w-full sm:w-[220px] pl-8 pr-3 py-1.5 text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-slate-700 dark:text-slate-300 font-bold placeholder-slate-400"
+                className="w-full sm:w-[220px] pl-8 pr-3 py-1.5 text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-slate-700 dark:text-slate-300 font-medium placeholder-slate-400"
               />
               {tableSearch && (
                 <button onClick={() => setTableSearch('')} className="absolute inset-y-0 right-0 flex items-center pr-2.5 text-slate-400 hover:text-slate-600">
@@ -618,7 +866,7 @@ export default function MultiplierDiary({
             <select
               value={rowsPerPage}
               onChange={e => setRowsPerPage(Number(e.target.value))}
-              className="text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-2.5 py-1.5 font-black text-slate-600 dark:text-slate-400 cursor-pointer"
+              className="text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-2.5 py-1.5 font-semibold text-slate-600 dark:text-slate-400 cursor-pointer"
             >
               <option value={10}>10 linhas</option>
               <option value={20}>20 linhas</option>
@@ -630,40 +878,44 @@ export default function MultiplierDiary({
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse text-xs font-semibold">
             <thead>
-              <tr className="bg-slate-50 dark:bg-slate-900/60 text-slate-500 dark:text-slate-400 border-b border-slate-100 dark:border-slate-800">
-                <th className="px-5 py-3 font-black text-[10px] uppercase tracking-wider">Data</th>
-                <th className="px-4 py-3 font-black text-[10px] uppercase tracking-wider">Multiplicador</th>
-                <th className="px-4 py-3 font-black text-[10px] uppercase tracking-wider">Unidade Escolar</th>
-                <th className="px-4 py-3 font-black text-[10px] uppercase tracking-wider text-center">Docentes</th>
-                <th className="px-4 py-3 font-black text-[10px] uppercase tracking-wider text-center">Alunos</th>
-                <th className="px-5 py-3 font-black text-[10px] uppercase tracking-wider">Ação / Categoria</th>
-                <th className="px-4 py-3 font-black text-[10px] uppercase tracking-wider text-center">Ficha</th>
+              <tr className="bg-slate-50 dark:bg-slate-900/60 text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
+                <th className="px-5 py-3 font-semibold text-[10px] uppercase tracking-wider">Data</th>
+                <th className="px-4 py-3 font-semibold text-[10px] uppercase tracking-wider">Multiplicador</th>
+                <th className="px-4 py-3 font-semibold text-[10px] uppercase tracking-wider">Unidade Escolar</th>
+                <th className="px-4 py-3 font-semibold text-[10px] uppercase tracking-wider text-center">Docentes</th>
+                <th className="px-4 py-3 font-semibold text-[10px] uppercase tracking-wider text-center">Alunos</th>
+                <th className="px-5 py-3 font-semibold text-[10px] uppercase tracking-wider">Ação / Categoria</th>
+                <th className="px-4 py-3 font-semibold text-[10px] uppercase tracking-wider text-center">Ficha</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80">
+            <tbody className="divide-y divide-slate-200 dark:divide-slate-800/80">
               {syncStatus === 'loading' ? (
                 <tr>
                   <td colSpan={7} className="px-5 py-16 text-center text-blue-600 dark:text-blue-400">
                     <Loader2 className="w-8 h-8 mx-auto mb-3 animate-spin text-blue-600" />
-                    <p className="font-black text-xs uppercase tracking-wider">Sincronizando diários...</p>
+                    <p className="font-semibold text-xs uppercase tracking-wider">Sincronizando diários...</p>
                   </td>
                 </tr>
               ) : paginatedRecords.length > 0 ? (
-                paginatedRecords.map((rec) => (
+                paginatedRecords.map((rec, index) => (
                   <tr 
                     key={rec.id} 
                     onClick={() => setSelectedRecordForModal(rec)}
-                    className="hover:bg-blue-50/30 dark:hover:bg-slate-800/30 transition-colors cursor-pointer group"
+                    className={`transition-colors cursor-pointer group hover:bg-blue-50/45 dark:hover:bg-slate-800/60 ${
+                      index % 2 === 0 
+                        ? 'bg-white dark:bg-[#111827]' 
+                        : 'bg-slate-50/70 dark:bg-slate-900/40'
+                    }`}
                   >
                     <td className="px-5 py-3.5 font-mono text-[10.5px] text-slate-500 dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400">{rec.dataOcorrencia}</td>
-                    <td className="px-4 py-3.5 font-black text-slate-800 dark:text-slate-200">{rec.solicitante}</td>
+                    <td className="px-4 py-3.5 font-semibold text-slate-800 dark:text-slate-200">{rec.solicitante}</td>
                     <td className="px-4 py-3.5 text-slate-600 dark:text-slate-300 truncate max-w-[220px]" title={rec.escolaNome}>
                       {rec.escolaNome}
                     </td>
-                    <td className="px-4 py-3.5 text-center font-mono font-black text-slate-500 dark:text-slate-400">{rec.qtdProfessores}</td>
-                    <td className="px-4 py-3.5 text-center font-mono font-black text-slate-500 dark:text-slate-400">{rec.qtdEstudantes}</td>
+                    <td className="px-4 py-3.5 text-center font-mono font-semibold text-slate-500 dark:text-slate-400">{rec.qtdProfessores}</td>
+                    <td className="px-4 py-3.5 text-center font-mono font-semibold text-slate-500 dark:text-slate-400">{rec.qtdEstudantes}</td>
                     <td className="px-5 py-3.5">
-                      <span className={`px-2.5 py-0.5 rounded text-[9px] font-black inline-block ${
+                      <span className={`px-2.5 py-0.5 rounded text-[9px] font-semibold inline-block ${
                         rec.categoria === 'Diário - Expediente na UTEC'
                           ? 'bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 border border-blue-100/40'
                           : rec.categoria === 'Diário - Eventos Externos'
@@ -686,7 +938,7 @@ export default function MultiplierDiary({
                 <tr>
                   <td colSpan={7} className="px-5 py-12 text-center text-slate-400 dark:text-slate-500">
                     <AlertCircle className="w-6 h-6 mx-auto mb-2 text-slate-300" />
-                    <p className="font-bold">Nenhum registro encontrado</p>
+                    <p className="font-semibold">Nenhum registro encontrado</p>
                     <p className="text-[10px] mt-1 text-slate-400">Verifique os filtros selecionados ou digite outra palavra chave.</p>
                   </td>
                 </tr>
@@ -697,15 +949,15 @@ export default function MultiplierDiary({
 
         {/* Pagination Controls */}
         {totalPages > 1 && (
-          <div className="px-5 py-3 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/10 flex items-center justify-between">
-            <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400">
+          <div className="px-5 py-3 border-t border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/10 flex items-center justify-between">
+            <span className="text-[10px] font-medium text-slate-500 dark:text-slate-400">
               Exibindo {Math.min(tableFilteredRecords.length, (currentPage - 1) * rowsPerPage + 1)}-{Math.min(tableFilteredRecords.length, currentPage * rowsPerPage)} de {tableFilteredRecords.length} registros
             </span>
             <div className="flex items-center gap-1">
               <button
                 disabled={currentPage === 1}
                 onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                className="px-2.5 py-1 text-[11px] font-black bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
+                className="px-2.5 py-1 text-[11px] font-semibold bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
               >
                 Anterior
               </button>
@@ -723,7 +975,7 @@ export default function MultiplierDiary({
                     <button
                       key={page}
                       onClick={() => setCurrentPage(page)}
-                      className={`w-6 h-6 flex items-center justify-center text-[10px] font-black rounded-md transition-all cursor-pointer ${
+                      className={`w-6 h-6 flex items-center justify-center text-[10px] font-semibold rounded-md transition-all cursor-pointer ${
                         isCurrent
                           ? 'bg-blue-600 text-white shadow-3xs'
                           : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50'
@@ -737,7 +989,7 @@ export default function MultiplierDiary({
               <button
                 disabled={currentPage === totalPages}
                 onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                className="px-2.5 py-1 text-[11px] font-black bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
+                className="px-2.5 py-1 text-[11px] font-semibold bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
               >
                 Próxima
               </button>

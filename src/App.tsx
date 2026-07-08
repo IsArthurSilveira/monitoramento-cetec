@@ -25,7 +25,8 @@ import {
   LogOut,
   Sparkles,
   Sun,
-  Moon
+  Moon,
+  Code2
 } from 'lucide-react';
 import Sidebar from './components/Sidebar';
 import KpiRow from './components/KpiRow';
@@ -39,47 +40,104 @@ import { INITIAL_UTECS, INITIAL_EDUCATIONAL_UNITS } from './data';
 
 // Helper to map spreadsheet groups to our supported UTEC IDs & Names dynamically
 const mapGroupToUtec = (grupoStr: string) => {
-  const normalized = String(grupoStr || "").toUpperCase();
-  if (normalized.includes("BOTANICO") || normalized.includes("JARDIM")) {
-    return { id: "utec-2", name: "UTEC JARDIM BOTANICO" };
-  }
-  if (normalized.includes("BOA VIAGEM")) {
+  const clean = (s: string) => {
+    return String(s || "")
+      .toUpperCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "") // remove accents
+      .replace(/[^A-Z0-9]/g, " ")      // replace symbols with spaces
+      .replace(/\s+/g, " ")             // squash spaces
+      .trim();
+  };
+
+  const cleanGrp = clean(grupoStr);
+  if (!cleanGrp) {
     return { id: "utec-1", name: "UTEC BOA VIAGEM" };
   }
-  if (normalized.includes("SITIO") || normalized.includes("TRINDADE")) {
+
+  // 1. Precise keyword rules for mapping
+  if (cleanGrp.includes("BOTANICO") || cleanGrp.includes("JARDIM")) {
+    return { id: "utec-2", name: "UTEC JARDIM BOTANICO" };
+  }
+  if (cleanGrp.includes("BOA VIAGEM") || cleanGrp.includes("VIAGEM")) {
+    return { id: "utec-1", name: "UTEC BOA VIAGEM" };
+  }
+  if (cleanGrp.includes("SITIO") || cleanGrp.includes("TRINDADE")) {
     return { id: "utec-3", name: "UTEC SITIO TRINDADE" };
   }
-  if (normalized.includes("SANTO AMARO")) {
+  if (cleanGrp.includes("SANTO AMARO") || cleanGrp.includes("AMARO")) {
     return { id: "utec-4", name: "UTEC SANTO AMARO" };
   }
-  if (normalized.includes("GREGORIO") || normalized.includes("BEZERRA")) {
+  if (cleanGrp.includes("GREGORIO") || cleanGrp.includes("BEZERRA")) {
     return { id: "utec-5", name: "UTEC GREGORIO BEZERRA" };
   }
-  if (normalized.includes("IBURA")) {
+  if (cleanGrp.includes("IBURA")) {
     return { id: "utec-6", name: "UTEC IBURA" };
   }
-  if (normalized.includes("ALTO SANTA") || normalized.includes("ALTO STA") || normalized.includes("TEREZINHA")) {
+  if (cleanGrp.includes("ALTO SANTA") || cleanGrp.includes("ALTO STA") || cleanGrp.includes("TEREZINHA") || cleanGrp.includes("SANTA TEREZINHA")) {
     return { id: "utec-7", name: "UTEC ALTO STA TEREZINHA" };
   }
-  if (normalized.includes("CAXANGÁ") || normalized.includes("CAXANGA")) {
+  if (cleanGrp.includes("CAXANGA")) {
     return { id: "utec-8", name: "UTEC CAXANGÁ" };
   }
-  if (normalized.includes("COQUE")) {
+  if (cleanGrp.includes("COQUE")) {
     return { id: "utec-9", name: "UTEC COQUE" };
   }
-  if (normalized.includes("CORDEIRO")) {
+  if (cleanGrp.includes("CORDEIRO")) {
     return { id: "utec-10", name: "UTEC CORDEIRO" };
   }
-  if (normalized.includes("CRISTIANO") || normalized.includes("DONATO")) {
+  if (cleanGrp.includes("CRISTIANO") || cleanGrp.includes("DONATO")) {
     return { id: "utec-11", name: "UTEC CRISTIANO DONATO" };
   }
-  if (normalized.includes("LARGO") || normalized.includes("DOM LUIS") || normalized.includes("LUIS")) {
+  if (cleanGrp.includes("LARGO") || cleanGrp.includes("DOM LUIS") || cleanGrp.includes("DOM LUIZ") || cleanGrp.includes("LUIS") || cleanGrp.includes("LUIZ")) {
     return { id: "utec-12", name: "UTEC LARGO DOM LUIS" };
   }
-  if (normalized.includes("NOVA DESCOBERTA")) {
+  if (cleanGrp.includes("NOVA DESCOBERTA") || cleanGrp.includes("DESCOBERTA")) {
     return { id: "utec-13", name: "UTEC NOVA DESCOBERTA" };
   }
-  return { id: "utec-1", name: "UTEC BOA VIAGEM" }; // Fallback
+  if (cleanGrp.includes("PINA")) {
+    return { id: "utec-14", name: "UTEC PINA" };
+  }
+
+  // 2. Dynamic lookup fallback against INITIAL_UTECS
+  const areUtecsMatching = (uName1: string, uName2: string) => {
+    const n1 = clean(uName1);
+    const n2 = clean(uName2);
+    if (!n1 || !n2) return false;
+    if (n1 === n2 || n1.includes(n2) || n2.includes(n1)) return true;
+    
+    const keywords = [
+      { keys: ["BOTANICO", "JARDIM"], matches: ["BOTANICO", "JARDIM"] },
+      { keys: ["BOA VIAGEM", "VIAGEM"], matches: ["BOA VIAGEM", "VIAGEM"] },
+      { keys: ["TRINDADE", "SITIO"], matches: ["TRINDADE", "SITIO"] },
+      { keys: ["SANTO AMARO", "AMARO"], matches: ["SANTO AMARO", "AMARO"] },
+      { keys: ["GREGORIO", "BEZERRA"], matches: ["GREGORIO", "BEZERRA"] },
+      { keys: ["IBURA"], matches: ["IBURA"] },
+      { keys: ["TEREZINHA", "ALTO SANTA", "ALTO STA"], matches: ["TEREZINHA", "ALTO SANTA", "ALTO STA"] },
+      { keys: ["CAXANGA"], matches: ["CAXANGA"] },
+      { keys: ["COQUE"], matches: ["COQUE"] },
+      { keys: ["CORDEIRO"], matches: ["CORDEIRO"] },
+      { keys: ["CRISTIANO", "DONATO"], matches: ["CRISTIANO", "DONATO"] },
+      { keys: ["LARGO", "DOM LUIS", "LUIS"], matches: ["LARGO", "DOM LUIS", "LUIS", "LUIZ"] },
+      { keys: ["NOVA DESCOBERTA", "DESCOBERTA"], matches: ["NOVA DESCOBERTA", "DESCOBERTA"] },
+      { keys: ["PINA"], matches: ["PINA"] }
+    ];
+
+    for (const kw of keywords) {
+      const anyKey1 = kw.keys.some(k => n1.includes(k));
+      const anyKey2 = kw.matches.some(m => n2.includes(m));
+      if (anyKey1 && anyKey2) return true;
+    }
+    return false;
+  };
+
+  for (const utec of INITIAL_UTECS) {
+    if (areUtecsMatching(utec.name, cleanGrp) || areUtecsMatching(cleanGrp, utec.name)) {
+      return { id: utec.id, name: utec.name };
+    }
+  }
+
+  return { id: "utec-1", name: "UTEC BOA VIAGEM" }; // Absolute fallback
 };
 
 const normalizeUtecId = (id: string | number): string => {
@@ -104,13 +162,18 @@ const normalizeUtecId = (id: string | number): string => {
     { id: 'utec-4', name: 'santo amaro' },
     { id: 'utec-5', name: 'gregorio bezerra' },
     { id: 'utec-6', name: 'ibura' },
-    { id: 'utec-7', name: 'casa amarela' },
-    { id: 'utec-8', name: 'cordeiro' },
-    { id: 'utec-9', name: 'largo da paz' },
-    { id: 'utec-10', name: 'tecnocoop' },
-    { id: 'utec-11', name: 'alto santa terezinha' },
-    { id: 'utec-12', name: 'macaxeira' },
-    { id: 'utec-13', name: 'nova descoberta' }
+    { id: 'utec-7', name: 'alto sta terezinha' },
+    { id: 'utec-7', name: 'alto santa terezinha' },
+    { id: 'utec-7', name: 'terezinha' },
+    { id: 'utec-8', name: 'caxanga' },
+    { id: 'utec-9', name: 'coque' },
+    { id: 'utec-10', name: 'cordeiro' },
+    { id: 'utec-11', name: 'cristiano donato' },
+    { id: 'utec-12', name: 'largo dom luis' },
+    { id: 'utec-12', name: 'dom luis' },
+    { id: 'utec-12', name: 'largo dom luiz' },
+    { id: 'utec-13', name: 'nova descoberta' },
+    { id: 'utec-14', name: 'pina' }
   ];
 
   const found = standardUtecs.find(u => {
@@ -120,6 +183,147 @@ const normalizeUtecId = (id: string | number): string => {
   if (found) return found.id;
 
   return str.toLowerCase();
+};
+
+const matchUtecRobustly = (groupStr: string, rowUtecIdRaw: any, dynamicUtecLookup: { id: string, name: string }[]) => {
+  if (rowUtecIdRaw !== undefined && rowUtecIdRaw !== null && String(rowUtecIdRaw).trim() !== "") {
+    const normId = normalizeUtecId(rowUtecIdRaw);
+    const matchedUtec = dynamicUtecLookup.find(u => normalizeUtecId(u.id) === normId);
+    if (matchedUtec) {
+      return { id: matchedUtec.id, name: matchedUtec.name };
+    }
+    const idNum = parseInt(String(rowUtecIdRaw).replace(/\D/g, ""), 10);
+    if (!isNaN(idNum)) {
+      const foundByIndex = dynamicUtecLookup.find(u => {
+        const uNum = parseInt(String(u.id).replace(/\D/g, ""), 10);
+        return uNum === idNum;
+      });
+      if (foundByIndex) {
+        return { id: foundByIndex.id, name: foundByIndex.name };
+      }
+    }
+  }
+
+  const clean = (s: string) => {
+    return String(s || "")
+      .toUpperCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^A-Z0-9]/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+  };
+
+  const cleanGrp = clean(groupStr);
+  if (!cleanGrp) {
+    return { id: "utec-1", name: "UTEC BOA VIAGEM" };
+  }
+
+  const areUtecsMatching = (uName1: string, uName2: string) => {
+    const n1 = clean(uName1);
+    const n2 = clean(uName2);
+    if (!n1 || !n2) return false;
+    
+    if (n1 === n2 || n1.includes(n2) || n2.includes(n1)) return true;
+    
+    const keywords = [
+      { keys: ["BOTANICO", "JARDIM"], matches: ["BOTANICO", "JARDIM"] },
+      { keys: ["BOA VIAGEM", "VIAGEM"], matches: ["BOA VIAGEM", "VIAGEM"] },
+      { keys: ["TRINDADE", "SITIO"], matches: ["TRINDADE", "SITIO"] },
+      { keys: ["SANTO AMARO", "AMARO"], matches: ["SANTO AMARO", "AMARO"] },
+      { keys: ["GREGORIO", "BEZERRA"], matches: ["GREGORIO", "BEZERRA"] },
+      { keys: ["IBURA"], matches: ["IBURA"] },
+      { keys: ["TEREZINHA", "ALTO SANTA", "ALTO STA"], matches: ["TEREZINHA", "ALTO SANTA", "ALTO STA"] },
+      { keys: ["CAXANGA"], matches: ["CAXANGA"] },
+      { keys: ["COQUE"], matches: ["COQUE"] },
+      { keys: ["CORDEIRO"], matches: ["CORDEIRO"] },
+      { keys: ["CRISTIANO", "DONATO"], matches: ["CRISTIANO", "DONATO"] },
+      { keys: ["LARGO", "DOM LUIS", "LUIS"], matches: ["LARGO", "DOM LUIS", "LUIS", "LUIZ"] },
+      { keys: ["NOVA DESCOBERTA", "DESCOBERTA"], matches: ["NOVA DESCOBERTA", "DESCOBERTA"] },
+      { keys: ["PINA"], matches: ["PINA"] }
+    ];
+
+    for (const kw of keywords) {
+      const anyKey1 = kw.keys.some(k => n1.includes(k));
+      const anyKey2 = kw.matches.some(m => n2.includes(m));
+      if (anyKey1 && anyKey2) return true;
+    }
+
+    return false;
+  };
+
+  for (const utec of dynamicUtecLookup) {
+    if (areUtecsMatching(utec.name, cleanGrp) || areUtecsMatching(cleanGrp, utec.name)) {
+      return { id: utec.id, name: utec.name };
+    }
+  }
+
+  return mapGroupToUtec(groupStr);
+};
+
+const normalizeCategory = (catStr: string): string => {
+  const s = String(catStr || "").toUpperCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "") // remove accents
+    .trim();
+
+  if (s.includes("EXPEDIENTE") || s.includes("INTERNO") || s.includes("SEDE") || s.includes("ADMINISTRATIVO")) {
+    return "Diário - Expediente na UTEC";
+  }
+  if (s.includes("EVENTO") || s.includes("EXTERNO") || s.includes("PALESTRA") || s.includes("FORA")) {
+    return "Diário - Eventos Externos";
+  }
+  if (s.includes("CLUBE") || s.includes("PROJETO") || s.includes("ROBOTICA") || s.includes("OFICINA")) {
+    return "Diário - Clubes e Projetos";
+  }
+  if (s.includes("REDS") || s.includes("ORIENTACAO") || s.includes("SUPORTE") || s.includes("ESCOLA") || s.includes("ATENDIMENTO") || s.includes("ASSISTENCIA")) {
+    return "Diário - Orientação REDS";
+  }
+
+  // Fallback
+  return "Diário - Orientação REDS";
+};
+
+const determineMonth = (dateStr: string): string => {
+  const str = String(dateStr || "").trim();
+  if (!str) return "mar. de 2026"; // Fallback
+
+  // 1. Try to match ISO format like YYYY-MM-DD (e.g. 2026-03-17 or 2026-3-17)
+  const isoMatch = str.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})/);
+  if (isoMatch) {
+    const monthNum = parseInt(isoMatch[2], 10);
+    const months = ["jan.", "fev.", "mar.", "abr.", "mai.", "jun.", "jul.", "ago.", "set.", "out.", "nov.", "dez."];
+    if (monthNum >= 1 && monthNum <= 12) {
+      return `${months[monthNum - 1]} de 2026`;
+    }
+  }
+
+  // 2. Try to match Brazilian format like DD/MM/YYYY or D/M/YYYY (e.g. 17/03/2026 or 17/3/2026)
+  const brMatch = str.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})/);
+  if (brMatch) {
+    const monthNum = parseInt(brMatch[2], 10);
+    const months = ["jan.", "fev.", "mar.", "abr.", "mai.", "jun.", "jul.", "ago.", "set.", "out.", "nov.", "dez."];
+    if (monthNum >= 1 && monthNum <= 12) {
+      return `${months[monthNum - 1]} de 2026`;
+    }
+  }
+
+  // 3. Fallback substrings
+  const lowerStr = str.toLowerCase();
+  if (lowerStr.includes("/01/") || lowerStr.includes("-01-") || lowerStr.includes("/1/") || lowerStr.includes("-1-")) return "jan. de 2026";
+  if (lowerStr.includes("/02/") || lowerStr.includes("-02-") || lowerStr.includes("/2/") || lowerStr.includes("-2-")) return "fev. de 2026";
+  if (lowerStr.includes("/03/") || lowerStr.includes("-03-") || lowerStr.includes("/3/") || lowerStr.includes("-3-")) return "mar. de 2026";
+  if (lowerStr.includes("/04/") || lowerStr.includes("-04-") || lowerStr.includes("/4/") || lowerStr.includes("-4-")) return "abr. de 2026";
+  if (lowerStr.includes("/05/") || lowerStr.includes("-05-") || lowerStr.includes("/5/") || lowerStr.includes("-5-")) return "mai. de 2026";
+  if (lowerStr.includes("/06/") || lowerStr.includes("-06-") || lowerStr.includes("/6/") || lowerStr.includes("-6-")) return "jun. de 2026";
+  if (lowerStr.includes("/07/") || lowerStr.includes("-07-") || lowerStr.includes("/7/") || lowerStr.includes("-7-")) return "jul. de 2026";
+  if (lowerStr.includes("/08/") || lowerStr.includes("-08-") || lowerStr.includes("/8/") || lowerStr.includes("-8-")) return "ago. de 2026";
+  if (lowerStr.includes("/09/") || lowerStr.includes("-09-") || lowerStr.includes("/9/") || lowerStr.includes("-9-")) return "set. de 2026";
+  if (lowerStr.includes("/10/") || lowerStr.includes("-10-")) return "out. de 2026";
+  if (lowerStr.includes("/11/") || lowerStr.includes("-11-")) return "nov. de 2026";
+  if (lowerStr.includes("/12/") || lowerStr.includes("-12-")) return "dez. de 2026";
+
+  return "mar. de 2026"; // Standard fallback
 };
 
 export default function App() {
@@ -134,6 +338,13 @@ export default function App() {
   const [syncError, setSyncError] = useState<string | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [diaryRecords, setDiaryRecords] = useState<any[]>([]);
+
+  // Dashboard-level regional & RPA filters for the KPIs and charts
+  const [dashboardRegional, setDashboardRegional] = useState('Todas');
+  const [dashboardRpa, setDashboardRpa] = useState('Todas');
+
+  // Authors / Developers info panel state
+  const [showDevs, setShowDevs] = useState(false);
 
   const API_FEED_URL = '/api/diary';
 
@@ -307,7 +518,16 @@ export default function App() {
       }
     });
 
-    const mappedEducationalUnits: EducationalUnit[] = rawUnidadesAtendidas.map(unit => {
+    const rawMappedEducationalUnits: EducationalUnit[] = rawUnidadesAtendidas
+      .filter(unit => {
+        const schoolId = String(getRowVal(unit, ["id_unidade", "id"])).trim();
+        const inep = String(getRowVal(unit, ["codigo_inep_unidade", "codigo_inep", "inep"])).trim();
+        const nome = String(getRowVal(unit, ["nome_unidade", "nome"])).trim();
+        if (!schoolId && !inep && !nome) return false;
+        if (schoolId.toLowerCase() === "undefined" && inep.toLowerCase() === "undefined" && nome.toLowerCase() === "undefined") return false;
+        return true;
+      })
+      .map((unit, idx) => {
       const schoolId = String(getRowVal(unit, ["id_unidade", "id"])).trim();
       const inep = String(getRowVal(unit, ["codigo_inep_unidade", "codigo_inep", "inep"])).trim();
       const utecIdRaw = String(getRowVal(unit, ["id_utec", "utec_id"])).trim();
@@ -319,8 +539,20 @@ export default function App() {
       
       const address = schoolAddressMap.get(schoolId) || String(getRowVal(unit, ["endereco", "rua"])).trim() || "Endereço não cadastrado";
       
+      const labLctVal = String(getRowVal(unit, ["lab_lct_unidade", "lab_lct", "lct"])).trim().toUpperCase();
+      const hasLct = labLctVal === "SIM" || labLctVal === "OK" || labLctVal === "1";
+      const qtdLct = hasLct ? 1 : 0;
+
+      const premiadoVal = String(getRowVal(unit, ["premiado_unidade", "premiado", "destaque_unidade", "destaque"])).trim();
+
+      const rawInep = inep || schoolId;
+      const invalidIneps = ["não encontrado", "não informado", "não se aplica", "n/a", "-", "null", "undefined", ""];
+      const cleanInep = (!rawInep || invalidIneps.includes(rawInep.toLowerCase()))
+        ? `inep-fake-${idx}`
+        : rawInep;
+
       return {
-        inep_escola: inep || schoolId,
+        inep_escola: cleanInep,
         id_utec_suporte: utecId,
         rpa_escola: rpaName,
         endereco: address,
@@ -329,12 +561,37 @@ export default function App() {
         tipo_unidade: String(getRowVal(unit, ["tipo_unidade", "tipo"])).trim() || "Escola",
         qtd_estudantes: parseInt(getRowVal(unit, ["qnt_estudantes_unidade", "quantidade_estudantes", "estudantes", "qnt_estudantes"]), 10) || 0,
         por_demanda: String(getRowVal(unit, ["por_demanda_unidade", "por_demanda"])).trim() || "Não",
-        qtd_lct: schoolLabs.get(schoolId) || 0,
+        qtd_lct: qtdLct,
         qtd_cineclube: schoolCinema.get(schoolId) || 0,
         qtd_robotica: schoolRob.get(schoolId) || 0,
         gestor: schoolGestores.get(schoolId) || "Gestor Escolar",
+        premiado: premiadoVal,
       };
     });
+
+    // Deduplicate by INEP code to ensure uniqueness and prevent key warnings
+    const uniqueUnitsMap = new Map<string, EducationalUnit>();
+    rawMappedEducationalUnits.forEach(unit => {
+      const existing = uniqueUnitsMap.get(unit.inep_escola);
+      if (!existing) {
+        uniqueUnitsMap.set(unit.inep_escola, unit);
+      } else {
+        // Merge attributes to prevent any data loss
+        existing.qtd_lct = Math.max(existing.qtd_lct, unit.qtd_lct);
+        existing.qtd_cineclube = Math.max(existing.qtd_cineclube, unit.qtd_cineclube);
+        existing.qtd_robotica = Math.max(existing.qtd_robotica, unit.qtd_robotica);
+        if (unit.por_demanda === 'Sim') {
+          existing.por_demanda = 'Sim';
+        }
+        if (unit.premiado && !existing.premiado) {
+          existing.premiado = unit.premiado;
+        }
+        if (unit.qtd_estudantes > existing.qtd_estudantes) {
+          existing.qtd_estudantes = unit.qtd_estudantes;
+        }
+      }
+    });
+    const mappedEducationalUnits = Array.from(uniqueUnitsMap.values());
 
     const utecStaffMap = new Map<string, any[]>();
     rawQuadroFuncional.forEach(func => {
@@ -405,17 +662,20 @@ export default function App() {
       const viceEmail = vice?.email || "";
       const vicePhone = vice?.phone || "";
 
+      const totalLct = supportedSchools.reduce((sum, u) => sum + (u.qtd_lct || 0), 0);
+      const totalPremiados = supportedSchools.filter(u => u.premiado && u.premiado.toUpperCase().includes("DESTAQUE")).length;
+
       return {
         id: utecId || `utec-${idx + 1}`,
         name,
         regional: regionalName,
         unidades: totalSchools || parseInt(getRowVal(utec, ["unidades_atendidas", "unidades"], 0), 10) || 0,
-        estudantes: totalStudents || parseInt(getRowVal(utec, ["estudantes", "alunos"], 0), 10) || 0,
-        lct: utecLabs.get(utecId) || 0,
+        estudantes: parseInt(getRowVal(utec, ["quantidade_aproximada_estudantes_utecs", "quantidade_aproximada_estudantes", "quantidade_estudantes_utecs", "quantidade_estudantes", "estudantes_utecs", "estudantes", "alunos"], 0), 10) || totalStudents || 0,
+        lct: totalLct,
         rob: utecRob.get(utecId) || 0,
         cine: utecCinema.get(utecId) || 0,
         fcd: utecCursos.get(utecId) || 0,
-        rev: 1,
+        rev: totalPremiados,
         coordinator: managerName,
         email: email || "utec@recife.pe.gov.br",
         phone: phone || "(81) 3355-0000",
@@ -445,6 +705,91 @@ export default function App() {
   }, [dynamicEducationalUnits]);
 
   const setUtecs = setLocalUtecs;
+
+  // Shared robust parsing of diary records
+  const parseDiaryRecords = (rawRecords: any[], dynamicUtecLookup: any[]) => {
+    return rawRecords.map((r: any, idx: number) => {
+      const grp = getRowVal(r, [
+        "grupo", "utec", "utecname", "utec_nome", "qualaasuaute", "qualaute", "qualaasuautec", "grupo_nome",
+        "qualasuautec", "qualasuautecdeapoio", "suautec", "utecapoio", "utec_responsavel", "utec_solicitante", "selectutec", "grupo_impacto"
+      ]) || "";
+      const rowUtecIdRaw = getRowVal(r, ["id_utec", "utec_id", "idutec"]);
+      const uInfo = matchUtecRobustly(grp, rowUtecIdRaw, dynamicUtecLookup);
+      
+      const rawId = String(getRowVal(r, ["protocolo", "id"]) || "").trim();
+      const invalidIds = ["não encontrado", "não informado", "não se aplica", "n/a", "-", "null", "undefined", ""];
+      const cleanId = (!rawId || invalidIds.includes(rawId.toLowerCase()))
+        ? `rec-${idx}`
+        : `${rawId}-${idx}`;
+
+      const dataOcorrencia = getRowVal(r, ["data_ocorrencia", "data", "dataocorrencia"]) || "";
+      const rawCategoria = getRowVal(r, ["categoria", "categoriadeatendimento", "tipodeatendimento", "setor", "tipo_atendimento", "area_setor_categoria", "area"]) || "";
+      const categoria = normalizeCategory(rawCategoria);
+      const atendimentoTipo = (categoria.includes("Expediente") || categoria.includes("Externo") || categoria === 'Diário - Expediente na UTEC') ? 'Externo/UTEC' : 'Escola';
+      const mes = determineMonth(dataOcorrencia);
+      const solicitante = getRowVal(r, ["nome_solicitante", "solicitante", "nome", "multiplicador"]) || "";
+
+      const rawEstudantes = getRowVal(r, ["estudantes", "qtd_estudantes", "estudantes_atendidos"]) || 0;
+      const rawProfessores = getRowVal(r, ["professores", "qtd_professores", "professores_atendidos"]) || 0;
+      const parseCount = (val: any): number => {
+        if (typeof val === 'number') return Math.floor(val);
+        const str = String(val).trim();
+        if (!str || str === "" || str === "-") return 0;
+        const parsed = parseInt(str, 10);
+        return isNaN(parsed) ? 0 : parsed;
+      };
+
+      const numEstudantes = parseCount(rawEstudantes);
+      const numProfessores = parseCount(rawProfessores);
+
+      return {
+        id: cleanId,
+        utecId: normalizeUtecId(uInfo.id),
+        utecName: uInfo.name,
+        escolaInep: getRowVal(r, ["codigo_inep_unidade", "unidade_de_ensino", "escola_inep", "inep", "codigo_inep"]) || "",
+        escolaNome: getRowVal(r, ["unidade_de_ensino", "escola", "escola_nome", "unidade"]) || "",
+        dataOcorrencia,
+        solicitante,
+        qtdProfessores: numProfessores > 0 ? numProfessores : '-',
+        qtdEstudantes: numEstudantes > 0 ? numEstudantes : '-',
+        categoria,
+        atendimentoTipo,
+        mes,
+        turno1: getRowVal(r, ["turno_1", "turno1"]),
+        turno2: getRowVal(r, ["turno_2", "turno2"]),
+        turno3: getRowVal(r, ["turno_3", "turno3"]),
+        participacao: getRowVal(r, ["participacao"]),
+        local: getRowVal(r, ["local"]),
+        observacoes: getRowVal(r, ["observacoes", "observacao"]),
+        usuExterno: getRowVal(r, ["usu_externo", "usuexterno"]),
+        atividadesDesenvolvidas: getRowVal(r, ["atividades_desenvolvidas", "atividadesdesenvolvidas"]),
+        observacao: getRowVal(r, ["observacoes", "observacao"]),
+        demanda: getRowVal(r, ["demanda"]),
+        anfitriaoNaUe: getRowVal(r, ["anfitriao_na_ue", "anfitriaonaue"]),
+        ocorrencia: getRowVal(r, ["ocorrencia"]),
+        planejamento: getRowVal(r, ["planejamento"]),
+        temaDaAtividade: getRowVal(r, ["tema_da_atividade", "temadaatividade"]),
+        outros: getRowVal(r, ["outros"]),
+        grupoImpacto: getRowVal(r, ["grupo_impacto", "grupoimpacto"]),
+        modalidade: getRowVal(r, ["modalidade"]),
+        estudantes: numEstudantes,
+        engajamentoEstudantes: getRowVal(r, ["engajamento_estudantes", "engajamentoestudantes"]),
+        professores: numProfessores,
+        engajamentoProfessores: getRowVal(r, ["engajamento_professores", "engajamentoprofessores"]),
+        redsFisicos: getRowVal(r, ["reds_fisicos", "redsfisicos"]),
+        softwares: getRowVal(r, ["softwares"]),
+        dataCarimbo: getRowVal(r, ["data_carimbo", "datacarimbo"]),
+        matriculaSolicitante: getRowVal(r, ["matricula_solicitante", "matriculasolicitante"]),
+        nomeSolicitante: solicitante,
+        unidadeDeEnsino: getRowVal(r, ["unidade_de_ensino", "unidadedeensino", "escola", "unidade"]) || "",
+        area: getRowVal(r, ["area"]),
+        setor: getRowVal(r, ["setor"]),
+        status: getRowVal(r, ["status"]),
+        protocolo: getRowVal(r, ["protocolo"]),
+        grupo: grp,
+      };
+    });
+  };
 
   // Function to fetch the relational database with all sheets (?tabela=todas) in real time
   const fetchDiaryData = async (manual = false) => {
@@ -491,92 +836,7 @@ export default function App() {
               };
             }).filter(u => u.name);
 
-            const findUtecDynamic = (groupStr: string, rowUtecIdRaw?: any) => {
-              if (rowUtecIdRaw !== undefined && rowUtecIdRaw !== null && String(rowUtecIdRaw).trim() !== "") {
-                const normId = normalizeUtecId(rowUtecIdRaw);
-                const matchedUtec = dynamicUtecLookup.find(u => normalizeUtecId(u.id) === normId);
-                if (matchedUtec) {
-                  return { id: matchedUtec.id, name: matchedUtec.name };
-                }
-                const idNum = parseInt(String(rowUtecIdRaw).replace(/\D/g, ""), 10);
-                if (!isNaN(idNum)) {
-                  const foundByIndex = dynamicUtecLookup.find(u => {
-                    const uNum = parseInt(String(u.id).replace(/\D/g, ""), 10);
-                    return uNum === idNum;
-                  });
-                  if (foundByIndex) {
-                    return { id: foundByIndex.id, name: foundByIndex.name };
-                  }
-                }
-              }
-
-              const normalizedGrp = String(groupStr || "").toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-              for (const utec of dynamicUtecLookup) {
-                const normalizedUtecName = utec.name.toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-                if (
-                  normalizedUtecName.includes(normalizedGrp) || 
-                  normalizedGrp.includes(normalizedUtecName) ||
-                  (normalizedGrp.includes("BOTANICO") && normalizedUtecName.includes("BOTANICO")) ||
-                  (normalizedGrp.includes("VIAGEM") && normalizedUtecName.includes("BOA VIAGEM")) ||
-                  (normalizedGrp.includes("TRINDADE") && normalizedUtecName.includes("TRINDADE")) ||
-                  (normalizedGrp.includes("DIGITAL") && normalizedUtecName.includes("DIGITAL"))
-                ) {
-                  return { id: utec.id, name: utec.name };
-                }
-              }
-              return mapGroupToUtec(groupStr);
-            };
-
-            const formatted = result.data[diaryKey].map((r: any, idx: number) => {
-              const grp = getRowVal(r, ["grupo", "grupo_impacto", "categoria"]) || "";
-              const rowUtecIdRaw = getRowVal(r, ["id_utec", "utec_id", "idutec"]);
-              const uInfo = findUtecDynamic(grp, rowUtecIdRaw);
-              return {
-                id: getRowVal(r, ["protocolo", "id"]) || `rec-${idx}`,
-                utecId: uInfo.id,
-                utecName: uInfo.name,
-                escolaInep: getRowVal(r, ["codigo_inep_unidade", "unidade_de_ensino", "escola_inep", "inep"]) || "",
-                escolaNome: getRowVal(r, ["unidade_de_ensino", "escola", "escola_nome", "unidade"]) || "",
-                dataOcorrencia: getRowVal(r, ["data_ocorrencia", "data", "dataocorrencia"]) || "",
-                solicitante: getRowVal(r, ["nome_solicitante", "solicitante", "nome"]) || "",
-                qtdProfessores: getRowVal(r, ["professores", "qtd_professores"]) || 0,
-                qtdEstudantes: getRowVal(r, ["estudantes", "qtd_estudantes"]) || 0,
-                categoria: getRowVal(r, ["area_setor_categoria", "categoria", "area"]) || "",
-                atendimentoTipo: 'Escola',
-                turno1: getRowVal(r, ["turno_1", "turno1"]),
-                turno2: getRowVal(r, ["turno_2", "turno2"]),
-                turno3: getRowVal(r, ["turno_3", "turno3"]),
-                participacao: getRowVal(r, ["participacao"]),
-                local: getRowVal(r, ["local"]),
-                observacoes: getRowVal(r, ["observacoes", "observacao"]),
-                usuExterno: getRowVal(r, ["usu_externo", "usuexterno"]),
-                atividadesDesenvolvidas: getRowVal(r, ["atividades_desenvolvidas", "atividadesdesenvolvidas"]),
-                observacao: getRowVal(r, ["observacoes", "observacao"]),
-                demanda: getRowVal(r, ["demanda"]),
-                anfitriaoNaUe: getRowVal(r, ["anfitriao_na_ue", "anfitriaonaue"]),
-                ocorrencia: getRowVal(r, ["ocorrencia"]),
-                planejamento: getRowVal(r, ["planejamento"]),
-                temaDaAtividade: getRowVal(r, ["tema_da_atividade", "temadaatividade"]),
-                outros: getRowVal(r, ["outros"]),
-                grupoImpacto: getRowVal(r, ["grupo_impacto", "grupoimpacto"]),
-                modalidade: getRowVal(r, ["modalidade"]),
-                estudantes: parseInt(getRowVal(r, ["estudantes", "qtd_estudantes"]), 10) || 0,
-                engajamentoEstudantes: getRowVal(r, ["engajamento_estudantes", "engajamentoestudantes"]),
-                professores: parseInt(getRowVal(r, ["professores", "qtd_professores"]), 10) || 0,
-                engajamentoProfessores: getRowVal(r, ["engajamento_professores", "engajamentoprofessores"]),
-                redsFisicos: getRowVal(r, ["reds_fisicos", "redsfisicos"]),
-                softwares: getRowVal(r, ["softwares"]),
-                dataCarimbo: getRowVal(r, ["data_carimbo", "datacarimbo"]),
-                matriculaSolicitante: getRowVal(r, ["matricula_solicitante", "matriculasolicitante"]),
-                nomeSolicitante: getRowVal(r, ["nome_solicitante", "nomesolicitante"]),
-                unidadeDeEnsino: getRowVal(r, ["unidade_de_ensino", "unidadedeensino"]),
-                area: getRowVal(r, ["area"]),
-                setor: getRowVal(r, ["setor"]),
-                status: getRowVal(r, ["status"]),
-                protocolo: getRowVal(r, ["protocolo"]),
-                grupo: getRowVal(r, ["grupo"]),
-              };
-            });
+            const formatted = parseDiaryRecords(result.data[diaryKey], dynamicUtecLookup);
             setDiaryRecords(formatted);
           }
           setSyncStatus('success');
@@ -675,6 +935,33 @@ export default function App() {
     return diaryRecords;
   }, [diaryRecords, isGestor, userUtecId]);
 
+  const dashboardFilteredUtecs = useMemo(() => {
+    return visibleUtecs.filter(u => {
+      const matchesRegional = dashboardRegional === 'Todas' || u.regional === dashboardRegional;
+      // Robust check for RPA code matching: "RPA 1" or "1"
+      const utecRpa = u.rpaSede || "";
+      const matchesRpa = dashboardRpa === 'Todas' || 
+        utecRpa === dashboardRpa || 
+        `RPA ${utecRpa}` === dashboardRpa || 
+        utecRpa.toUpperCase() === dashboardRpa.toUpperCase();
+      return matchesRegional && matchesRpa;
+    });
+  }, [visibleUtecs, dashboardRegional, dashboardRpa]);
+
+  const dashboardFilteredEducationalUnits = useMemo(() => {
+    return visibleEducationalUnits.filter(e => {
+      const parentUtec = visibleUtecs.find(u => normalizeUtecId(u.id) === normalizeUtecId(e.id_utec_suporte));
+      if (!parentUtec) return false;
+      const matchesRegional = dashboardRegional === 'Todas' || parentUtec.regional === dashboardRegional;
+      const utecRpa = parentUtec.rpaSede || "";
+      const matchesRpa = dashboardRpa === 'Todas' || 
+        utecRpa === dashboardRpa || 
+        `RPA ${utecRpa}` === dashboardRpa || 
+        utecRpa.toUpperCase() === dashboardRpa.toUpperCase();
+      return matchesRegional && matchesRpa;
+    });
+  }, [visibleEducationalUnits, visibleUtecs, dashboardRegional, dashboardRpa]);
+
   useEffect(() => {
     if (isLoggedIn && isGestor && activeTab === 'Dashboards') {
       setActiveTab('Informações');
@@ -706,12 +993,6 @@ export default function App() {
 
   const handleDeleteUtec = (id: string) => {
     setUtecs((prev) => prev.filter((item) => item.id !== id));
-  };
-
-  const handleResetData = () => {
-    if (confirm('Deseja realmente restaurar os dados originais do Figma?')) {
-      setUtecs(INITIAL_UTECS);
-    }
   };
 
   const handleCpfChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -782,71 +1063,7 @@ export default function App() {
                 };
               }).filter(u => u.name);
 
-              const findUtecDynamic = (groupStr: string, rowUtecIdRaw?: any) => {
-                if (rowUtecIdRaw !== undefined && rowUtecIdRaw !== null && String(rowUtecIdRaw).trim() !== "") {
-                  const normId = normalizeUtecId(rowUtecIdRaw);
-                  const matchedUtec = dynamicUtecLookup.find(u => normalizeUtecId(u.id) === normId);
-                  if (matchedUtec) {
-                    return { id: matchedUtec.id, name: matchedUtec.name };
-                  }
-                }
-                const normalizedGrp = String(groupStr || "").toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-                for (const utec of dynamicUtecLookup) {
-                  const normalizedUtecName = utec.name.toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-                  if (normalizedGrp.includes(normalizedUtecName) || normalizedUtecName.includes(normalizedGrp)) {
-                    return { id: utec.id, name: utec.name };
-                  }
-                }
-                return { id: "utec-1", name: "UTEC BOA VIAGEM" };
-              };
-
-              const formatted = result.data[diaryKey].map((r: any, idx: number) => {
-                const grp = getRowVal(r, ["grupo", "grupo_impacto", "categoria"]) || "";
-                const rowUtecIdRaw = getRowVal(r, ["id_utec", "utec_id", "idutec"]);
-                const uInfo = findUtecDynamic(grp, rowUtecIdRaw);
-                return {
-                  id: getRowVal(r, ["protocolo", "id"]) || `rec-${idx}`,
-                  utecId: uInfo.id,
-                  utecName: uInfo.name,
-                  grupoImpacto: getRowVal(r, ["grupo_impacto", "grupoimpacto"]),
-                  dataAtividade: getRowVal(r, ["data_atividade", "dataatividade", "data_da_atividade"]),
-                  formato: getRowVal(r, ["formato"]),
-                  multiplicador: getRowVal(r, ["multiplicador", "nome_multiplicador"]),
-                  categoria: getRowVal(r, ["area_setor_categoria", "categoria", "area"]) || "",
-                  atendimentoTipo: 'Escola',
-                  turno1: getRowVal(r, ["turno_1", "turno1"]),
-                  turno2: getRowVal(r, ["turno_2", "turno2"]),
-                  turno3: getRowVal(r, ["turno_3", "turno3"]),
-                  participacao: getRowVal(r, ["participacao"]),
-                  local: getRowVal(r, ["local"]),
-                  observacoes: getRowVal(r, ["observacoes", "observacao"]),
-                  usuExterno: getRowVal(r, ["usu_externo", "usuexterno"]),
-                  atividadesDesenvolvidas: getRowVal(r, ["atividades_desenvolvidas", "atividadesdesenvolvidas"]),
-                  observacao: getRowVal(r, ["observacoes", "observacao"]),
-                  demanda: getRowVal(r, ["demanda"]),
-                  anfitriaoNaUe: getRowVal(r, ["anfitriao_na_ue", "anfitriaonaue"]),
-                  ocorrencia: getRowVal(r, ["ocorrencia"]),
-                  planejamento: getRowVal(r, ["planejamento"]),
-                  temaDaAtividade: getRowVal(r, ["tema_da_atividade", "temadaatividade"]),
-                  outros: getRowVal(r, ["outros"]),
-                  modalidade: getRowVal(r, ["modalidade"]),
-                  estudantes: parseInt(getRowVal(r, ["estudantes", "qtd_estudantes"]), 10) || 0,
-                  engajamentoEstudantes: getRowVal(r, ["engajamento_estudantes", "engajamentoestudantes"]),
-                  professores: parseInt(getRowVal(r, ["professores", "qtd_professores"]), 10) || 0,
-                  engajamentoProfessores: getRowVal(r, ["engajamento_professores", "engajamentoprofessores"]),
-                  redsFisicos: getRowVal(r, ["reds_fisicos", "redsfisicos"]),
-                  softwares: getRowVal(r, ["softwares"]),
-                  dataCarimbo: getRowVal(r, ["data_carimbo", "datacarimbo"]),
-                  matriculaSolicitante: getRowVal(r, ["matricula_solicitante", "matriculasolicitante"]),
-                  nomeSolicitante: getRowVal(r, ["nome_solicitante", "nomesolicitante"]),
-                  unidadeDeEnsino: getRowVal(r, ["unidade_de_ensino", "unidadedeensino"]),
-                  area: getRowVal(r, ["area"]),
-                  setor: getRowVal(r, ["setor"]),
-                  status: getRowVal(r, ["status"]),
-                  protocolo: getRowVal(r, ["protocolo"]),
-                  grupo: getRowVal(r, ["grupo"]),
-                };
-              });
+              const formatted = parseDiaryRecords(result.data[diaryKey], dynamicUtecLookup);
               setDiaryRecords(formatted);
             }
 
@@ -891,7 +1108,7 @@ export default function App() {
                 <Database className="w-6 h-6" />
               </div>
               <div className="space-y-1.5">
-                <h3 className="text-sm font-extrabold text-slate-800 dark:text-white">Erro ao Sincronizar Banco de Dados</h3>
+                <h3 className="text-sm font-semibold text-slate-800 dark:text-white">Erro ao Sincronizar Banco de Dados</h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400 font-sans font-medium">
                   {syncError || "Não foi possível estabelecer conexão com o Google Sheets."}
                 </p>
@@ -899,7 +1116,7 @@ export default function App() {
               <button
                 type="button"
                 onClick={() => fetchDiaryData(true)}
-                className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#1E40AF] text-white text-xs font-black rounded-lg hover:bg-blue-700 transition cursor-pointer"
+                className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#1E40AF] text-white text-xs font-semibold rounded-lg hover:bg-blue-700 transition cursor-pointer"
               >
                 <RefreshCw className="w-3.5 h-3.5" />
                 Tentar Sincronizar Novamente
@@ -988,11 +1205,70 @@ export default function App() {
 
         return (
           <>
+            {/* Dashboard-level Regional and RPA Filters */}
+            <div id="dashboard-filters-bar" className="flex flex-wrap items-center justify-between gap-3 bg-white dark:bg-[#111827] border border-slate-200 dark:border-slate-800/80 rounded-2xl px-4 py-3 mb-4 shadow-2xs">
+              <div className="flex items-center gap-2">
+                <div className="w-2.5 h-2.5 rounded-full bg-[#1E40AF] animate-pulse" />
+                <span className="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wide">
+                  Filtros dos Gráficos e KPIs:
+                </span>
+                {(dashboardRegional !== 'Todas' || dashboardRpa !== 'Todas') && (
+                  <button
+                    onClick={() => {
+                      setDashboardRegional('Todas');
+                      setDashboardRpa('Todas');
+                    }}
+                    className="text-[10px] text-blue-600 dark:text-blue-400 hover:underline font-semibold ml-2 cursor-pointer"
+                  >
+                    (Limpar Filtros)
+                  </button>
+                )}
+              </div>
+              <div className="flex items-center gap-3 flex-wrap sm:flex-nowrap">
+                {/* Regional Filter */}
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase">Regional:</span>
+                  <select
+                    id="dashboard-regional-select"
+                    value={dashboardRegional}
+                    onChange={(e) => setDashboardRegional(e.target.value)}
+                    className="text-xs font-semibold px-2.5 py-1.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg focus:border-[#1E40AF] focus:outline-hidden text-slate-600 dark:text-slate-300 cursor-pointer min-w-[110px]"
+                  >
+                    <option value="Todas">Todas</option>
+                    <option value="Regional 1">Regional 1</option>
+                    <option value="Regional 2">Regional 2</option>
+                    <option value="Regional 3">Regional 3</option>
+                    <option value="Regional 4">Regional 4</option>
+                    <option value="Regional 5">Regional 5</option>
+                  </select>
+                </div>
+
+                {/* RPA Filter */}
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase">RPA:</span>
+                  <select
+                    id="dashboard-rpa-select"
+                    value={dashboardRpa}
+                    onChange={(e) => setDashboardRpa(e.target.value)}
+                    className="text-xs font-bold px-2.5 py-1.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg focus:border-[#1E40AF] focus:outline-hidden text-slate-600 dark:text-slate-300 cursor-pointer min-w-[100px]"
+                  >
+                    <option value="Todas">Todas</option>
+                    <option value="RPA 1">RPA 1</option>
+                    <option value="RPA 2">RPA 2</option>
+                    <option value="RPA 3">RPA 3</option>
+                    <option value="RPA 4">RPA 4</option>
+                    <option value="RPA 5">RPA 5</option>
+                    <option value="RPA 6">RPA 6</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
             {/* 1. Dynamic KPI Metrics Grid */}
-            <KpiRow utecs={utecs} />
+            <KpiRow utecs={dashboardFilteredUtecs} />
 
             {/* 2. Recharts Analytics Visualizer Panel */}
-            <UtecCharts utecs={utecs} educationalUnits={educationalUnits} isDarkMode={isDarkMode} />
+            <UtecCharts utecs={dashboardFilteredUtecs} educationalUnits={dashboardFilteredEducationalUnits} isDarkMode={isDarkMode} />
 
             {/* 3. Interactive Data List & Detailed UTEC Profiles card columns */}
             <UtecTable 
@@ -1030,13 +1306,13 @@ export default function App() {
         return (
           <div id="config-tab-view" className="bg-white dark:bg-[#111827] rounded-2xl p-4 shadow-sm border border-slate-100 dark:border-slate-800 space-y-4 max-w-xl">
             <div className="pb-3 border-b border-slate-200 dark:border-slate-800">
-              <h2 className="text-sm font-extrabold text-slate-800 dark:text-white">Aparência e Configurações</h2>
+              <h2 className="text-sm font-semibold text-slate-800 dark:text-white">Aparência e Configurações</h2>
               <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium font-sans">Escolha o tema visual de exibição do portal de monitoramento UTEC.</p>
             </div>
 
             {/* Tema Switcher Visual Selection */}
             <div className="space-y-3">
-              <h3 className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 pl-0.5">
+              <h3 className="text-xs font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 pl-0.5">
                 <Sparkles className="w-4 h-4 text-[#1E40AF]" /> Tema do Sistema
               </h3>
 
@@ -1131,7 +1407,7 @@ export default function App() {
               <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-950/40 text-[#1E40AF] dark:text-blue-400 mb-2">
                 <SlidersHorizontal className="w-6 h-6 animate-pulse" />
               </div>
-              <h2 className="text-xl font-black text-slate-900 dark:text-white tracking-tight">Sistema de Monitoramento</h2>
+              <h2 className="text-xl font-semibold text-slate-900 dark:text-white tracking-tight">Sistema de Monitoramento</h2>
               <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
                 Insira o seu CPF de acesso para visualizar o painel operacional de monitoramento tecnológico.
               </p>
@@ -1139,7 +1415,7 @@ export default function App() {
 
             <form onSubmit={handleLogin} className="space-y-4">
               <div className="space-y-1.5">
-                <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest block pl-1">CPF de Acesso</label>
+                <label className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-widest block pl-1">CPF de Acesso</label>
                 <div className="relative">
                   <input
                     type="text"
@@ -1148,7 +1424,7 @@ export default function App() {
                     disabled={isLoggingIn}
                     placeholder="000.000.000-00"
                     maxLength={14}
-                    className={`w-full text-sm font-bold tracking-widest text-center px-4 py-3.5 bg-slate-50 dark:bg-slate-900 border ${
+                    className={`w-full text-sm font-medium tracking-widest text-center px-4 py-3.5 bg-slate-50 dark:bg-slate-900 border ${
                       loginError 
                         ? 'border-red-500 ring-1 ring-red-150/40' 
                         : 'border-slate-200 dark:border-slate-800 focus:border-[#1E40AF] focus:ring-2 focus:ring-blue-100/50 dark:focus:ring-blue-900/40'
@@ -1175,7 +1451,7 @@ export default function App() {
                 type="submit"
                 id="btn-submit-login"
                 disabled={isLoggingIn}
-                className="w-full flex items-center justify-center gap-2 text-xs font-black uppercase tracking-wider text-white bg-[#1E40AF] hover:bg-blue-800 dark:bg-blue-600 dark:hover:bg-blue-500 py-4 px-6 rounded-2xl transition-all shadow-md hover:shadow-lg active:scale-[0.99] disabled:opacity-70 disabled:cursor-not-allowed"
+                className="w-full flex items-center justify-center gap-2 text-xs font-semibold uppercase tracking-wider text-white bg-[#1E40AF] hover:bg-blue-800 dark:bg-blue-600 dark:hover:bg-blue-500 py-4 px-6 rounded-2xl transition-all shadow-md hover:shadow-lg active:scale-[0.99] disabled:opacity-70 disabled:cursor-not-allowed"
               >
                 {isLoggingIn ? (
                   <>
@@ -1203,7 +1479,7 @@ export default function App() {
   }
 
   return (
-    <div className={`flex h-screen bg-[#F8FAFC] dark:bg-[#090D1A] overflow-hidden font-sans ${isDarkMode ? 'dark' : ''}`}>
+    <div className={`flex h-screen bg-slate-100 dark:bg-[#070A13] overflow-hidden font-sans ${isDarkMode ? 'dark' : ''}`}>
       {/* Sidebar (left-side columns panel) */}
       <Sidebar
         activeTab={activeTab}
@@ -1217,7 +1493,7 @@ export default function App() {
       {/* Main content viewport block */}
       <div className="flex-1 flex flex-col h-full overflow-hidden">
         {/* Dynamic header row (visible on mobile / desktop context) */}
-        <header id="app-workspace-header" className="bg-white dark:bg-[#111827] border-b border-slate-100 dark:border-slate-800 px-5 py-2.5 flex items-center justify-between z-30">
+        <header id="app-workspace-header" className="bg-white dark:bg-[#111827] border-b border-[#1E40AF] dark:border-slate-800 px-5 h-[72px] flex-shrink-0 flex items-center justify-between z-30 shadow-xs">
           <div className="flex items-center gap-3">
             {/* Hamburger mobile menu triggers sidebar */}
             <button
@@ -1229,8 +1505,8 @@ export default function App() {
             </button>
             
             <div className="flex flex-col">
-              <span className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest pl-0.5">Portal Executivo</span>
-              <h1 className="text-base md:text-lg font-extrabold text-slate-900 dark:text-white tracking-tight flex items-center gap-1.5">
+              <span className="text-[9px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-widest pl-0.5">Portal Executivo</span>
+              <h1 className="text-base md:text-lg font-semibold text-slate-900 dark:text-white tracking-tight flex items-center gap-1.5">
                 {activeTab === 'Dashboards' ? 'Visão Geral' : activeTab === 'Config' ? 'Configurações' : activeTab === 'Diário' ? 'Diário do Multiplicador' : activeTab}
               </h1>
             </div>
@@ -1241,7 +1517,7 @@ export default function App() {
             <button
               onClick={() => fetchDiaryData(true)}
               disabled={isRefreshing || syncStatus === 'loading'}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-[11px] font-bold tracking-wide transition-all duration-300 ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-[11px] font-semibold tracking-wide transition-all duration-300 ${
                 syncStatus === 'success'
                   ? 'bg-emerald-50/60 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-900/60 text-emerald-700 dark:text-emerald-400'
                   : syncStatus === 'loading' || isRefreshing
@@ -1250,7 +1526,7 @@ export default function App() {
                   ? 'bg-rose-50/60 dark:bg-rose-950/20 border-rose-200 dark:border-rose-900/60 text-rose-700 dark:text-rose-400'
                   : 'bg-slate-50 dark:bg-slate-900/60 border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400'
               }`}
-              title="Sincronizar todas as 13 abas do Google Sheets em tempo real"
+              title="Sincronizar com o Sheets"
             >
               {syncStatus === 'loading' || isRefreshing ? (
                 <RefreshCw className="w-3.5 h-3.5 animate-spin flex-shrink-0" />
@@ -1268,18 +1544,76 @@ export default function App() {
               </span>
             </button>
 
-            {/* Simulation reset quick control */}
-            <button
-              id="quick-reset-button"
-              onClick={handleResetData}
-              className="p-1.5 text-slate-400 hover:text-[#4B39EF] dark:hover:text-blue-400 hover:bg-indigo-50/50 dark:hover:bg-blue-950/40 border border-slate-200 dark:border-slate-800 rounded-xl transition-all hidden sm:block"
-              title="Restaurar dados iniciais do Figma"
-            >
-              <RefreshCw className="w-3.5 h-3.5 flex-shrink-0" />
-            </button>
+            {/* Authors/Developers Popover */}
+            <div className="relative">
+              <button
+                type="button"
+                id="devs-info-trigger-btn"
+                onClick={() => setShowDevs(!showDevs)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-[11px] font-bold tracking-wide transition-all ${
+                  showDevs
+                    ? 'bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-400 ring-2 ring-blue-100 dark:ring-blue-900/20'
+                    : 'bg-slate-50 dark:bg-slate-900/60 border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/40'
+                }`}
+                title="Desenvolvedores do Projeto"
+              >
+                <Code2 className="w-3.5 h-3.5 flex-shrink-0" />
+                <span>Desenvolvedores</span>
+              </button>
+
+              {showDevs && (
+                <>
+                  {/* Backdrop overlay to close when clicking outside */}
+                  <div 
+                    className="fixed inset-0 z-40 cursor-default" 
+                    onClick={() => setShowDevs(false)} 
+                  />
+                  
+                  {/* Floating credits card */}
+                  <div 
+                    id="devs-credits-popover" 
+                    className="absolute right-0 mt-2 w-56 bg-white dark:bg-[#111827] border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-xl z-50 animate-in fade-in slide-in-from-top-2 duration-200"
+                  >
+                    <div className="flex items-center gap-2 pb-2.5 mb-2.5 border-b border-slate-100 dark:border-slate-800">
+                      <div className="p-1 bg-blue-50 dark:bg-blue-950 text-[#1E40AF] dark:text-blue-400 rounded-lg">
+                        <Code2 className="w-3.5 h-3.5" />
+                      </div>
+                      <div>
+                        <h4 className="text-[11px] font-semibold text-slate-800 dark:text-slate-200 uppercase tracking-wider">Desenvolvedores</h4>
+                        <p className="text-[9px] text-slate-400 dark:text-slate-500 font-semibold leading-none mt-0.5">Equipe Técnica</p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2.5">
+                      <div className="flex items-center gap-2 group">
+                        <div className="w-1.5 h-1.5 rounded-full bg-blue-500 group-hover:scale-125 transition-transform" />
+                        <div>
+                          <p className="text-xs font-semibold text-slate-800 dark:text-slate-200">Arthur Silveira</p>
+                          <p className="text-[9px] text-slate-400 dark:text-slate-500 font-medium">Desenvolvedor do Projeto</p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 group">
+                        <div className="w-1.5 h-1.5 rounded-full bg-indigo-500 group-hover:scale-125 transition-transform" />
+                        <div>
+                          <p className="text-xs font-semibold text-slate-800 dark:text-slate-200">Matheus Oliveira</p>
+                          <p className="text-[9px] text-slate-400 dark:text-slate-500 font-medium">Desenvolvedor do Projeto</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-800 text-center">
+                      <span className="text-[8px] font-semibold text-slate-400 dark:text-slate-600 uppercase tracking-widest">
+                        Prefeitura do Recife
+                      </span>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
 
             {/* Current formatted UTC date */}
-            <div className="px-3 py-1.5 bg-slate-50 dark:bg-slate-900/60 rounded-xl border border-slate-100 dark:border-slate-800 text-[11px] font-bold text-slate-500 dark:text-slate-400 tracking-wide flex items-center gap-1.5 shadow-2xs font-mono">
+            <div className="px-3 py-1.5 bg-slate-50 dark:bg-slate-900/60 rounded-xl border border-slate-100 dark:border-slate-800 text-[11px] font-semibold text-slate-500 dark:text-slate-400 tracking-wide flex items-center gap-1.5 shadow-2xs font-mono">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-pulse flex-shrink-0" />
               <span>
                 {currentDateTime.toLocaleDateString('pt-BR', {
@@ -1290,7 +1624,7 @@ export default function App() {
                 }).replace(/^\w/, (c) => c.toUpperCase())}
               </span>
               <span className="text-slate-200 dark:text-slate-800 flex-shrink-0">|</span>
-              <span className="text-[#1E40AF] dark:text-blue-400 font-black flex-shrink-0">
+              <span className="text-[#1E40AF] dark:text-blue-400 font-semibold flex-shrink-0">
                 {currentDateTime.toLocaleTimeString('pt-BR', {
                   hour: '2-digit',
                   minute: '2-digit',

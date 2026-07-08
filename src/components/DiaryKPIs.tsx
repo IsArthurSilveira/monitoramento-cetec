@@ -19,16 +19,16 @@ export default function DiaryKPIs({
       {/* Card 1: Total de Atividades */}
       <div 
         id="kpi-total-atividades"
-        className="flex items-center justify-between p-4 bg-white dark:bg-[#111827] rounded-xl border border-slate-100 dark:border-slate-800 shadow-3xs border-l-4 border-l-blue-600 dark:border-l-blue-500 hover:shadow-xs transition-all"
+        className="flex items-center justify-between p-4 bg-white dark:bg-[#111827] rounded-xl border border-slate-200 dark:border-slate-800 shadow-3xs border-l-4 border-l-blue-600 dark:border-l-blue-500 hover:shadow-xs transition-all"
       >
         <div className="space-y-1 min-w-0">
-          <span className="block text-[10px] font-black tracking-wider text-slate-400 dark:text-slate-500 uppercase truncate">
+          <span className="block text-[10px] font-semibold tracking-wider text-slate-400 dark:text-slate-500 uppercase truncate">
             Total de Atividades
           </span>
-          <h3 className="text-2xl font-black tracking-tight text-slate-800 dark:text-slate-100 leading-none">
+          <h3 className="text-2xl font-semibold tracking-tight text-slate-800 dark:text-slate-100 leading-none">
             {totalRegistros}
           </h3>
-          <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold">
+          <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">
             Registros sincronizados
           </p>
         </div>
@@ -40,16 +40,16 @@ export default function DiaryKPIs({
       {/* Card 2: Multiplicadores */}
       <div 
         id="kpi-multiplicadores"
-        className="flex items-center justify-between p-4 bg-white dark:bg-[#111827] rounded-xl border border-slate-100 dark:border-slate-800 shadow-3xs border-l-4 border-l-indigo-600 dark:border-l-indigo-500 hover:shadow-xs transition-all"
+        className="flex items-center justify-between p-4 bg-white dark:bg-[#111827] rounded-xl border border-slate-200 dark:border-slate-800 shadow-3xs border-l-4 border-l-indigo-600 dark:border-l-indigo-500 hover:shadow-xs transition-all"
       >
         <div className="space-y-1 min-w-0">
-          <span className="block text-[10px] font-black tracking-wider text-slate-400 dark:text-slate-500 uppercase truncate">
+          <span className="block text-[10px] font-semibold tracking-wider text-slate-400 dark:text-slate-500 uppercase truncate">
             Multiplicadores Ativos
           </span>
-          <h3 className="text-2xl font-black tracking-tight text-slate-800 dark:text-slate-100 leading-none">
+          <h3 className="text-2xl font-semibold tracking-tight text-slate-800 dark:text-slate-100 leading-none">
             {multiplicadoresCount}
           </h3>
-          <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold">
+          <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">
             Profissionais dedicados
           </p>
         </div>
@@ -61,16 +61,16 @@ export default function DiaryKPIs({
       {/* Card 3: Professores Impactados */}
       <div 
         id="kpi-professores"
-        className="flex items-center justify-between p-4 bg-white dark:bg-[#111827] rounded-xl border border-slate-100 dark:border-slate-800 shadow-3xs border-l-4 border-l-emerald-600 dark:border-l-emerald-500 hover:shadow-xs transition-all"
+        className="flex items-center justify-between p-4 bg-white dark:bg-[#111827] rounded-xl border border-slate-200 dark:border-slate-800 shadow-3xs border-l-4 border-l-emerald-600 dark:border-l-emerald-500 hover:shadow-xs transition-all"
       >
         <div className="space-y-1 min-w-0">
-          <span className="block text-[10px] font-black tracking-wider text-slate-400 dark:text-slate-500 uppercase truncate">
+          <span className="block text-[10px] font-semibold tracking-wider text-slate-400 dark:text-slate-500 uppercase truncate">
             Professores Impactados
           </span>
-          <h3 className="text-2xl font-black tracking-tight text-slate-800 dark:text-slate-100 leading-none">
+          <h3 className="text-2xl font-semibold tracking-tight text-slate-800 dark:text-slate-100 leading-none">
             {professoresImpactados}
           </h3>
-          <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold">
+          <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">
             Docentes assessorados
           </p>
         </div>
@@ -82,16 +82,16 @@ export default function DiaryKPIs({
       {/* Card 4: Estudantes Impactados */}
       <div 
         id="kpi-estudantes"
-        className="flex items-center justify-between p-4 bg-white dark:bg-[#111827] rounded-xl border border-slate-100 dark:border-slate-800 shadow-3xs border-l-4 border-l-pink-600 dark:border-l-pink-500 hover:shadow-xs transition-all"
+        className="flex items-center justify-between p-4 bg-white dark:bg-[#111827] rounded-xl border border-slate-200 dark:border-slate-800 shadow-3xs border-l-4 border-l-pink-600 dark:border-l-pink-500 hover:shadow-xs transition-all"
       >
         <div className="space-y-1 min-w-0">
-          <span className="block text-[10px] font-black tracking-wider text-slate-400 dark:text-slate-500 uppercase truncate">
+          <span className="block text-[10px] font-semibold tracking-wider text-slate-400 dark:text-slate-500 uppercase truncate">
             Estudantes Impactados
           </span>
-          <h3 className="text-2xl font-black tracking-tight text-slate-800 dark:text-slate-100 leading-none">
+          <h3 className="text-2xl font-semibold tracking-tight text-slate-800 dark:text-slate-100 leading-none">
             {estudantesImpactados}
           </h3>
-          <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold">
+          <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">
             Alunos engajados
           </p>
         </div>

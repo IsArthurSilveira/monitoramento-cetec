@@ -130,7 +130,7 @@ export default function AddUtecModal({ isOpen, onClose, onAdd, nextUtecNum }: Ad
                   <Building2 className="w-6 h-6 flex-shrink-0" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-black text-slate-800 dark:text-slate-100 tracking-tight">Cadastrar Nova UTEC</h3>
+                  <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100 tracking-tight">Cadastrar Nova UTEC</h3>
                   <p className="text-xs text-slate-400 dark:text-slate-400 font-medium">Cadastre um novo centro tecnológico e lance os dados de atendimento no painel</p>
                 </div>
               </div>
@@ -253,10 +253,10 @@ export default function AddUtecModal({ isOpen, onClose, onAdd, nextUtecNum }: Ad
 
               {/* Row 4: Program Status values */}
               <div className="bg-slate-50 dark:bg-slate-900/60 p-4 rounded-2xl space-y-3 border border-slate-100 dark:border-slate-800">
-                <h4 className="text-xs font-extrabold text-indigo-900 dark:text-blue-300 uppercase tracking-wide">Status de Programas Cadastrados (Valores de Badge)</h4>
+                <h4 className="text-xs font-semibold text-indigo-900 dark:text-blue-300 uppercase tracking-wide">Status de Programas Cadastrados (Valores de Badge)</h4>
                 <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
                   <div className="space-y-1">
-                    <label className="text-[10px] font-extrabold text-slate-500 block uppercase text-center">Lab LCT</label>
+                    <label className="text-[10px] font-semibold text-slate-500 block uppercase text-center">Lab LCT</label>
                     <input
                       id="add-input-lct"
                       type="number"
@@ -264,11 +264,11 @@ export default function AddUtecModal({ isOpen, onClose, onAdd, nextUtecNum }: Ad
                       min={0}
                       value={lct}
                       onChange={(e) => setLct(parseInt(e.target.value) || 0)}
-                      className="w-full text-xs font-bold text-center py-2 bg-white dark:bg-[#111827] border border-slate-202 dark:border-slate-800 rounded-xl dark:text-slate-200"
+                      className="w-full text-xs font-medium text-center py-2 bg-white dark:bg-[#111827] border border-slate-202 dark:border-slate-800 rounded-xl dark:text-slate-200"
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[10px] font-extrabold text-slate-500 block uppercase text-center">Robótica</label>
+                    <label className="text-[10px] font-semibold text-slate-500 block uppercase text-center">Robótica</label>
                     <input
                       id="add-input-rob"
                       type="number"
@@ -276,11 +276,11 @@ export default function AddUtecModal({ isOpen, onClose, onAdd, nextUtecNum }: Ad
                       min={0}
                       value={rob}
                       onChange={(e) => setRob(parseInt(e.target.value) || 0)}
-                      className="w-full text-xs font-bold text-center py-2 bg-white dark:bg-[#111827] border border-slate-202 dark:border-slate-800 rounded-xl dark:text-slate-200"
+                      className="w-full text-xs font-medium text-center py-2 bg-white dark:bg-[#111827] border border-slate-202 dark:border-slate-800 rounded-xl dark:text-slate-200"
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[10px] font-extrabold text-slate-500 block uppercase text-center">Cineclube</label>
+                    <label className="text-[10px] font-semibold text-slate-500 block uppercase text-center">Cineclube</label>
                     <input
                       id="add-input-cine"
                       type="number"
@@ -288,11 +288,11 @@ export default function AddUtecModal({ isOpen, onClose, onAdd, nextUtecNum }: Ad
                       min={0}
                       value={cine}
                       onChange={(e) => setCine(parseInt(e.target.value) || 0)}
-                      className="w-full text-xs font-bold text-center py-2 bg-white dark:bg-[#111827] border border-slate-202 dark:border-slate-800 rounded-xl dark:text-slate-200"
+                      className="w-full text-xs font-medium text-center py-2 bg-white dark:bg-[#111827] border border-slate-202 dark:border-slate-800 rounded-xl dark:text-slate-200"
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[10px] font-extrabold text-slate-500 block uppercase text-center">Formações</label>
+                    <label className="text-[10px] font-semibold text-slate-500 block uppercase text-center">Formações</label>
                     <input
                       id="add-input-fcd"
                       type="number"
@@ -300,11 +300,11 @@ export default function AddUtecModal({ isOpen, onClose, onAdd, nextUtecNum }: Ad
                       min={0}
                       value={fcd}
                       onChange={(e) => setFcd(parseInt(e.target.value) || 0)}
-                      className="w-full text-xs font-bold text-center py-2 bg-white dark:bg-[#111827] border border-slate-202 dark:border-slate-800 rounded-xl dark:text-slate-200"
+                      className="w-full text-xs font-medium text-center py-2 bg-white dark:bg-[#111827] border border-slate-202 dark:border-slate-800 rounded-xl dark:text-slate-200"
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[10px] font-extrabold text-slate-500 block uppercase text-center">Premiados</label>
+                    <label className="text-[10px] font-semibold text-slate-500 block uppercase text-center">Premiados</label>
                     <input
                       id="add-input-rev"
                       type="number"
@@ -312,7 +312,7 @@ export default function AddUtecModal({ isOpen, onClose, onAdd, nextUtecNum }: Ad
                       min={0}
                       value={rev}
                       onChange={(e) => setRev(parseInt(e.target.value) || 0)}
-                      className="w-full text-xs font-bold text-center py-2 bg-white dark:bg-[#111827] border border-slate-202 dark:border-slate-800 rounded-xl dark:text-slate-200"
+                      className="w-full text-xs font-medium text-center py-2 bg-white dark:bg-[#111827] border border-slate-202 dark:border-slate-800 rounded-xl dark:text-slate-200"
                     />
                   </div>
                 </div>

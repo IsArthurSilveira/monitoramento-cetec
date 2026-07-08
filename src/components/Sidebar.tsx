@@ -67,11 +67,11 @@ export default function Sidebar({ activeTab, setActiveTab, isOpen, setIsOpen, on
               <User className="w-4 h-4 text-white dark:text-blue-400" />
             </div>
             <div className="flex flex-col overflow-hidden whitespace-nowrap">
-              <span className="text-[11px] font-extrabold tracking-wider uppercase text-white dark:text-slate-100 truncate max-w-[130px]" title={currentUser?.nome || "Administrador Geral"}>
+              <span className="text-[13px] font-semibold tracking-wider uppercase text-white dark:text-slate-100 truncate max-w-[150px]" title={currentUser?.nome || "Administrador Geral"}>
                 {currentUser?.nome || "Administrador Geral"}
               </span>
               {currentUser?.nivel_acesso && (
-                <span className="text-[9px] font-medium text-blue-200 dark:text-slate-400 capitalize">
+                <span className="text-[10px] font-medium text-blue-200 dark:text-slate-400 capitalize">
                   {currentUser.nivel_acesso}
                 </span>
               )}
@@ -96,7 +96,7 @@ export default function Sidebar({ activeTab, setActiveTab, isOpen, setIsOpen, on
               <div key={item.id} className="flex flex-col">
                 <button
                   id={`nav-item-${item.id}`}
-                  className={`flex items-center justify-between w-full px-3 py-2.5 text-xs font-bold rounded-xl transition-all duration-250 ${
+                  className={`flex items-center justify-between w-full px-3 py-2.5 text-xs font-semibold rounded-xl transition-all duration-250 ${
                     isActive 
                       ? 'bg-white dark:bg-slate-800 text-[#1E40AF] dark:text-blue-400 shadow-xs' 
                       : 'text-blue-105 hover:bg-white/10 hover:text-white dark:text-slate-400 dark:hover:bg-slate-800/50 dark:hover:text-slate-200'
@@ -125,7 +125,7 @@ export default function Sidebar({ activeTab, setActiveTab, isOpen, setIsOpen, on
           <div className="px-3 py-2 border-t border-[#1D4ED8] dark:border-slate-800/60 bg-black/5 dark:bg-slate-950/20">
             <button
               onClick={onLogout}
-              className="flex items-center gap-3 w-full px-3 py-2 text-xs font-bold rounded-xl text-red-200 hover:bg-red-600/20 hover:text-red-100 transition-all duration-250 font-sans"
+              className="flex items-center gap-3 w-full px-3 py-2 text-xs font-semibold rounded-xl text-red-200 hover:bg-red-600/20 hover:text-red-100 transition-all duration-250 font-sans"
             >
               <LogOut className="w-4.5 h-4.5 flex-shrink-0" />
               <span>Sair do Painel</span>
@@ -135,7 +135,7 @@ export default function Sidebar({ activeTab, setActiveTab, isOpen, setIsOpen, on
 
         {/* Footer */}
         <div className="p-4 border-t border-[#1D4ED8] dark:border-slate-800/65 bg-black/10 dark:bg-slate-900/40 flex flex-col items-center justify-center flex-shrink-0">
-          <p className="text-[9px] leading-relaxed text-blue-200 dark:text-slate-500 font-extrabold tracking-wide uppercase text-center whitespace-nowrap">
+          <p className="text-[9px] leading-relaxed text-blue-200 dark:text-slate-500 font-semibold tracking-wide uppercase text-center whitespace-nowrap">
             Prefeitura do Recife
           </p>
         </div>

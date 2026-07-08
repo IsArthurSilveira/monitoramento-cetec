@@ -25,7 +25,8 @@ import {
   Film,
   Users,
   Briefcase,
-  Clock
+  Clock,
+  Trophy
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { UtecMetric, EducationalUnit } from '../types';
@@ -121,6 +122,7 @@ export default function UtecInfoPage({
   const [selectedUtecId, setSelectedUtecId] = useState<string>('');
   const [utecSearchQuery, setUtecSearchQuery] = useState('');
   const [selectedRegionalFilter, setSelectedRegionalFilter] = useState('Todas');
+  const [selectedRpaFilter, setSelectedRpaFilter] = useState('Todas');
   
   // School search and filter inside the details panel
   const [schoolSearchQuery, setSchoolSearchQuery] = useState('');
@@ -198,9 +200,25 @@ export default function UtecInfoPage({
         vice.includes(utecSearchQuery.toLowerCase());
       
       const matchesRegional = selectedRegionalFilter === 'Todas' || utec.dynamicRegionals.includes(selectedRegionalFilter);
-      return matchesSearch && matchesRegional;
+      
+      const physicalRpa = getUtecPhysicalRpa(utec.id);
+      const matchesRpa = selectedRpaFilter === 'Todas' || 
+        utec.dynamicRpas.includes(selectedRpaFilter) || 
+        physicalRpa === selectedRpaFilter;
+
+      return matchesSearch && matchesRegional && matchesRpa;
     });
-  }, [utecsWithDynamicScopes, utecSearchQuery, selectedRegionalFilter]);
+  }, [utecsWithDynamicScopes, utecSearchQuery, selectedRegionalFilter, selectedRpaFilter]);
+
+  // Auto-select first filtered UTEC when list changes
+  useEffect(() => {
+    if (filteredUtecs.length > 0) {
+      const isStillInList = filteredUtecs.some(u => u.id === selectedUtecId);
+      if (!isStillInList) {
+        setSelectedUtecId(filteredUtecs[0].id);
+      }
+    }
+  }, [filteredUtecs, selectedUtecId]);
 
   // Map of UTEC ID to object for fast lookup
   const utecLookup = useMemo(() => {
@@ -256,14 +274,15 @@ export default function UtecInfoPage({
   }
 
   return (
-    <div className="space-y-6 animate-fade-in" id="info-tab-wrapper">
+    <>
+      <div className="space-y-4 animate-fade-in -mt-2 lg:-mt-4" id="info-tab-wrapper">
       
       {/* 2. Main Two-Column Panel */}
       <div id="utec-info-view-container" className={`grid grid-cols-1 ${utecsToUse.length > 1 ? 'lg:grid-cols-3' : ''} gap-6`}>
         
         {/* Left Column (1/3 Width) - Center selector sidebar */}
         {utecsToUse.length > 1 && (
-          <div className="lg:col-span-1 lg:sticky lg:top-6 lg:self-start flex flex-col gap-4">
+          <div className="lg:col-span-1 lg:sticky lg:top-4 lg:self-start flex flex-col gap-4">
             
             {/* Header query panel */}
             <div className="bg-white dark:bg-[#111827] rounded-xl shadow-xs border border-slate-100 dark:border-slate-800 p-4 flex flex-col gap-3">
@@ -284,19 +303,37 @@ export default function UtecInfoPage({
                 />
               </div>
 
-              {/* Regional drop filter */}
-              <div className="space-y-1">
-                <label className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase block pl-1">Filtrar por Regional</label>
-                <select
-                  value={selectedRegionalFilter}
-                  onChange={(e) => setSelectedRegionalFilter(e.target.value)}
-                  className="w-full text-xs font-bold px-2.5 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg focus:border-[#1E40AF] focus:outline-hidden text-slate-600 dark:text-slate-300"
-                >
-                  <option value="Todas">Todas as Regionais ({REGIONALS.length})</option>
-                  {REGIONALS.map((reg) => (
-                    <option key={reg} value={reg}>{reg}</option>
-                  ))}
-                </select>
+              {/* Filters side by side */}
+              <div className="grid grid-cols-2 gap-2">
+                {/* Regional drop filter */}
+                <div className="space-y-1">
+                  <label className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase block pl-1">Regional</label>
+                  <select
+                    value={selectedRegionalFilter}
+                    onChange={(e) => setSelectedRegionalFilter(e.target.value)}
+                    className="w-full text-xs font-bold px-2.5 py-1.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg focus:border-[#1E40AF] focus:outline-hidden text-slate-600 dark:text-slate-300 cursor-pointer"
+                  >
+                    <option value="Todas">Todas ({REGIONALS.length})</option>
+                    {REGIONALS.map((reg) => (
+                      <option key={reg} value={reg}>{reg}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* RPA drop filter */}
+                <div className="space-y-1">
+                  <label className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase block pl-1">RPA</label>
+                  <select
+                    value={selectedRpaFilter}
+                    onChange={(e) => setSelectedRpaFilter(e.target.value)}
+                    className="w-full text-xs font-bold px-2.5 py-1.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg focus:border-[#1E40AF] focus:outline-hidden text-slate-600 dark:text-slate-300 cursor-pointer"
+                  >
+                    <option value="Todas">Todas (6)</option>
+                    {['RPA 1', 'RPA 2', 'RPA 3', 'RPA 4', 'RPA 5', 'RPA 6'].map((rpa) => (
+                      <option key={rpa} value={rpa}>{rpa}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
             </div>
 
@@ -813,9 +850,17 @@ export default function UtecInfoPage({
 
                               {/* school info */}
                               <div className="pt-0.5">
-                                <h4 className="text-[12.5px] font-black text-slate-800 dark:text-slate-200 line-clamp-1 group-hover:text-[#1E40AF] dark:group-hover:text-blue-400 transition-colors" title={unit.nome_unidade}>
-                                  {unit.nome_unidade}
-                                </h4>
+                                <div className="flex items-center justify-between gap-1.5 min-w-0">
+                                  <h4 className="text-[12.5px] font-black text-slate-800 dark:text-slate-200 line-clamp-1 group-hover:text-[#1E40AF] dark:group-hover:text-blue-400 transition-colors min-w-0" title={unit.nome_unidade}>
+                                    {unit.nome_unidade}
+                                  </h4>
+                                  {unit.premiado && unit.premiado.toUpperCase().includes("DESTAQUE") && (
+                                    <span className="flex items-center gap-0.5 px-1.5 py-0.5 bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 rounded text-[7.5px] font-black tracking-wider uppercase flex-shrink-0 animate-pulse">
+                                      <Trophy className="w-2 h-2 flex-shrink-0" />
+                                      Destaque
+                                    </span>
+                                  )}
+                                </div>
                                 <p className="text-[9.5px] font-semibold text-slate-400 dark:text-slate-500 leading-relaxed block truncate mt-0.5">
                                   {unit.tipo_unidade} • {unit.modalidade_ensino}
                                 </p>
@@ -869,15 +914,30 @@ export default function UtecInfoPage({
           )}
         </div>
       </div>
+    </div>
 
-      {/* 3. Beautiful Modal for Educational Unit Details */}
+    {/* 3. Beautiful Modal for Educational Unit Details */}
+    <AnimatePresence>
       {selectedUnit && (
-        <div 
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs transition-opacity"
-          onClick={() => setSelectedUnit(null)}
-        >
-          <div 
-            className="w-full max-w-lg bg-white dark:bg-[#111827] rounded-2xl shadow-xl border border-slate-100 dark:border-slate-800 overflow-hidden flex flex-col max-h-[90vh]"
+        <div id="school-detail-modal-overlay" className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          {/* Backdrop with fade transition */}
+          <motion.div
+            id="school-modal-backdrop"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-[#0F172A]/75 backdrop-blur-xs"
+            onClick={() => setSelectedUnit(null)}
+          />
+
+          {/* Modal Card with slide-up zoom transition */}
+          <motion.div
+            id="school-modal-card"
+            initial={{ scale: 0.95, opacity: 0, y: 15 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0.95, opacity: 0, y: 15 }}
+            transition={{ type: 'spring', duration: 0.4 }}
+            className="relative bg-white dark:bg-[#111827] border border-slate-200 dark:border-slate-800 rounded-3xl w-full max-w-lg shadow-2xl flex flex-col overflow-hidden max-h-[85vh] z-10"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
@@ -901,7 +961,7 @@ export default function UtecInfoPage({
             </div>
 
             {/* Modal Scrollable Content Container - Compact padding */}
-            <div className="p-4 overflow-y-auto space-y-3">
+            <div className="p-4 overflow-y-auto space-y-3 flex-1 scrollbar-thin">
               <div>
                 <span className="text-[8px] font-black text-indigo-600 dark:text-blue-400 uppercase tracking-widest block font-sans">Nome da Unidade</span>
                 <h4 className="text-sm font-extrabold text-slate-900 dark:text-white mt-0.5 leading-snug">{selectedUnit.nome_unidade}</h4>
@@ -1002,9 +1062,10 @@ export default function UtecInfoPage({
                 Voltar ao Painel
               </button>
             </div>
-          </div>
+          </motion.div>
         </div>
       )}
+    </AnimatePresence>
 
       {/* Quadro Funcional Completo Modal */}
       <AnimatePresence>
@@ -1016,7 +1077,7 @@ export default function UtecInfoPage({
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-slate-950/75 backdrop-blur-lg"
+              className="fixed inset-0 bg-[#0F172A]/75 backdrop-blur-xs"
               onClick={() => setIsStaffModalOpen(false)}
             />
 
@@ -1027,17 +1088,15 @@ export default function UtecInfoPage({
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.95, opacity: 0, y: 15 }}
               transition={{ type: 'spring', duration: 0.4 }}
-              className="relative bg-slate-50/98 dark:bg-[#0B0F19]/98 backdrop-blur-xl w-full max-w-4xl h-[85vh] rounded-3xl p-6 shadow-2xl border border-white/40 dark:border-slate-800/40 flex flex-col overflow-hidden z-10"
+              className="relative bg-white dark:bg-[#111827] border border-slate-200 dark:border-slate-800 rounded-3xl w-full max-w-4xl max-h-[85vh] p-6 shadow-2xl flex flex-col overflow-hidden z-10"
+              onClick={(e) => e.stopPropagation()}
             >
-              {/* Top branding ribbon banner */}
-              <div className="absolute top-0 inset-x-0 h-2 bg-gradient-to-r from-blue-500 via-[#4B39EF] to-indigo-600" />
-
               {/* Modal Header */}
               <div className="flex items-start justify-between pb-4 border-b border-slate-100 dark:border-slate-800">
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
                     <Users className="w-5 h-5 text-[#4B39EF] dark:text-blue-400" />
-                    <h2 className="text-base font-black text-slate-800 dark:text-slate-100 uppercase tracking-tight">
+                    <h2 className="text-base font-semibold text-slate-800 dark:text-slate-100 uppercase tracking-tight">
                       Quadro de Funcionários
                     </h2>
                   </div>
@@ -1079,15 +1138,15 @@ export default function UtecInfoPage({
                   </div>
 
                   {/* Quick counts */}
-                  <div className="flex items-center gap-2 flex-wrap text-[10px] font-black uppercase tracking-wider text-slate-500">
+                  <div className="flex items-center gap-2 flex-wrap text-[10px] font-semibold uppercase tracking-wider text-slate-500">
                     <span className="px-2.5 py-1.5 bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800/60 rounded-lg flex items-center gap-1.5 text-slate-700 dark:text-slate-300">
-                      Total: <span className="font-mono text-xs font-black text-[#4B39EF] dark:text-blue-400">{selectedUtec.staff?.length || 0}</span>
+                      Total: <span className="font-mono text-xs font-semibold text-[#4B39EF] dark:text-blue-400">{selectedUtec.staff?.length || 0}</span>
                     </span>
                     <span className="px-2.5 py-1.5 bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-100/50 dark:border-emerald-900/30 rounded-lg flex items-center gap-1.5 text-emerald-700 dark:text-emerald-400">
-                      Ativos: <span className="font-mono text-xs font-black">{(selectedUtec.staff || []).filter(s => s.status?.toLowerCase() !== 'afastado').length}</span>
+                      Ativos: <span className="font-mono text-xs font-semibold">{(selectedUtec.staff || []).filter(s => s.status?.toLowerCase() !== 'afastado').length}</span>
                     </span>
                     <span className="px-2.5 py-1.5 bg-rose-50 dark:bg-rose-950/20 border border-rose-100/50 dark:border-rose-900/30 rounded-lg flex items-center gap-1.5 text-rose-700 dark:text-rose-400">
-                      Afastados: <span className="font-mono text-xs font-black">{(selectedUtec.staff || []).filter(s => s.status?.toLowerCase() === 'afastado').length}</span>
+                      Afastados: <span className="font-mono text-xs font-semibold">{(selectedUtec.staff || []).filter(s => s.status?.toLowerCase() === 'afastado').length}</span>
                     </span>
                   </div>
                 </div>
@@ -1113,7 +1172,7 @@ export default function UtecInfoPage({
                     return (
                       <div className="h-48 flex flex-col items-center justify-center text-center p-6 border border-dashed border-slate-200 dark:border-slate-800 rounded-2xl bg-slate-50/50 dark:bg-slate-900/20">
                         <Users className="w-10 h-10 text-slate-300 dark:text-slate-650 mb-2" />
-                        <h4 className="text-xs font-black text-slate-700 dark:text-slate-350 uppercase tracking-wide">
+                        <h4 className="text-xs font-semibold text-slate-700 dark:text-slate-350 uppercase tracking-wide">
                           Nenhum funcionário encontrado
                         </h4>
                         <p className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold font-sans mt-1">
@@ -1139,7 +1198,7 @@ export default function UtecInfoPage({
                             <div className="space-y-2.5">
                               {/* Top Role and Status badge row */}
                               <div className="flex items-start justify-between gap-2 flex-wrap">
-                                <span className={`px-2 py-0.5 text-[8.5px] font-black rounded uppercase tracking-wider inline-block ${
+                                <span className={`px-2 py-0.5 text-[8.5px] font-semibold rounded uppercase tracking-wider inline-block ${
                                   isGestao 
                                     ? 'text-[#4B39EF] dark:text-blue-300 bg-blue-100/50 dark:bg-blue-950/40' 
                                     : 'text-slate-700 dark:text-slate-300 bg-slate-100/80 dark:bg-slate-800/70'
@@ -1147,7 +1206,7 @@ export default function UtecInfoPage({
                                   {person.role || 'Funcionário'}
                                 </span>
                                 
-                                <span className={`px-2 py-0.5 text-[8px] font-black rounded uppercase tracking-wider ${
+                                <span className={`px-2 py-0.5 text-[8px] font-semibold rounded uppercase tracking-wider ${
                                   isAfastado 
                                     ? 'bg-rose-100/70 text-rose-700 dark:bg-rose-950/30 dark:text-rose-400' 
                                     : 'bg-emerald-100/70 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400'
@@ -1158,7 +1217,7 @@ export default function UtecInfoPage({
 
                               {/* Name */}
                               <div>
-                                <h4 className="text-[13px] font-black text-slate-800 dark:text-slate-100 leading-snug">
+                                <h4 className="text-[13px] font-semibold text-slate-800 dark:text-slate-100 leading-snug">
                                   {person.name || 'Sem nome'}
                                 </h4>
                               </div>
@@ -1208,7 +1267,7 @@ export default function UtecInfoPage({
 
                             {/* Contact Section footer */}
                             {(person.email || person.phone) && (
-                              <div className="space-y-1.5 border-t border-slate-100 dark:border-slate-850 pt-3 text-[11px] font-medium font-sans text-slate-600 dark:text-slate-400 mt-1">
+                              <div className="space-y-1.5 border-t border-slate-200 dark:border-slate-850 pt-3 text-[11px] font-medium font-sans text-slate-600 dark:text-slate-400 mt-1">
                                 {person.email && (
                                   <div className="flex items-center gap-2 py-0.5">
                                     <Mail className="w-3.5 h-3.5 text-slate-400 group-hover:text-[#4B39EF] dark:group-hover:text-blue-400 transition-colors flex-shrink-0" />
@@ -1233,11 +1292,11 @@ export default function UtecInfoPage({
               </div>
 
               {/* Modal Footer */}
-              <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-end">
+              <div className="pt-4 border-t border-slate-200 dark:border-slate-800 flex justify-end">
                 <button
                   type="button"
                   onClick={() => setIsStaffModalOpen(false)}
-                  className="px-5 py-2 text-xs font-black uppercase tracking-wider text-slate-700 hover:text-slate-950 dark:text-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 hover:bg-slate-200 bg-slate-100 rounded-xl transition-all cursor-pointer shadow-3xs"
+                  className="px-5 py-2 text-xs font-semibold uppercase tracking-wider text-slate-700 hover:text-slate-950 dark:text-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 hover:bg-slate-200 bg-slate-100 rounded-xl transition-all cursor-pointer shadow-3xs"
                 >
                   Fechar Quadro
                 </button>
@@ -1246,6 +1305,6 @@ export default function UtecInfoPage({
           </div>
         )}
       </AnimatePresence>
-    </div>
+    </>
   );
 }

@@ -8,6 +8,10 @@ async function startServer() {
 
   app.use(express.json());
 
+  // =========================================================================
+  // COLE AQUI A URL GERADA PELA IMPLANTAÇÃO DO SEU GOOGLE APPS SCRIPT (WEB APP)
+  // Exemplo: 'https://script.google.com/macros/s/SUA_CHAVE_AQUI/exec'
+  // =========================================================================
   const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzvUAoQISzqv0KCj5lTdW9Hz3BBsa3r4xBF4nayAqjO9mtxdZMZYNx-4-P4IVylxc6A/exec';
 
   // Memory cache to prevent slow repeated Google Sheets API queries

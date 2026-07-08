@@ -55,6 +55,7 @@ export interface EducationalUnit {
   qtd_robotica: number;
   gestor?: string;
   vice_gestor?: string;
+  premiado?: string;
 }
 
 export interface KpiCard {

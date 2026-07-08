@@ -57,21 +57,13 @@ export default function UtecCharts({ utecs, educationalUnits = [], isDarkMode = 
   }));
 
   // 2. Map data for the Donut Chart (Distribuição Regional)
-  // Calculate students by regional dynamically using the RPA of each educational unit.
+  // Calculate students by regional dynamically using the UTECs' students count
   const regionalGroups: { [key: string]: number } = {};
   
-  if (educationalUnits && educationalUnits.length > 0) {
-    educationalUnits.forEach((unit) => {
-      const regName = getRegionalFromRpa(unit.rpa_escola || "");
-      regionalGroups[regName] = (regionalGroups[regName] || 0) + (unit.qtd_estudantes || 0);
-    });
-  } else {
-    // Fallback to utec regional if units list is empty
-    utecs.forEach((utec) => {
-      const regName = utec.regional || "Sem Regional";
-      regionalGroups[regName] = (regionalGroups[regName] || 0) + utec.estudantes;
-    });
-  }
+  utecs.forEach((utec) => {
+    const regName = utec.regional || "Sem Regional";
+    regionalGroups[regName] = (regionalGroups[regName] || 0) + utec.estudantes;
+  });
 
   // Sort regionals to keep them aligned
   const donutData = Object.keys(regionalGroups)
@@ -149,8 +141,8 @@ export default function UtecCharts({ utecs, educationalUnits = [], isDarkMode = 
   return (
     <div id="charts-layout-grid" className="grid grid-cols-1 lg:grid-cols-7 gap-4">
       {/* 1. Bar Chart: Indicadores por UTEC (5 Columns on Desktop) */}
-      <div id="bar-chart-card" className="col-span-1 lg:col-span-5 bg-white dark:bg-[#111827] rounded-xl p-4.5 shadow-xs border border-slate-100 dark:border-slate-800 flex flex-col justify-between">
-        <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800 mb-2 flex-wrap gap-2">
+      <div id="bar-chart-card" className="col-span-1 lg:col-span-5 bg-white dark:bg-[#111827] rounded-2xl p-5 shadow-sm border border-slate-200 dark:border-slate-800 flex flex-col justify-between">
+        <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800 mb-2 flex-wrap gap-2">
           <div>
             <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100">Indicadores por UTEC</h3>
             <p className="text-[11px] text-slate-400 dark:text-slate-400 font-medium font-sans">Arraste para os lados para visualizar todos as 14 UTECs cadastradas</p>
@@ -179,7 +171,9 @@ export default function UtecCharts({ utecs, educationalUnits = [], isDarkMode = 
                   dataKey="name" 
                   axisLine={false}
                   tickLine={false}
-                  tick={{ fill: isDarkMode ? '#94A3B8' : '#64748B', fontSize: 10, fontWeight: '700' }}
+                  interval={0}
+                  tickFormatter={(val) => val.replace('UTEC ', '')}
+                  tick={{ fill: isDarkMode ? '#94A3B8' : '#64748B', fontSize: 9.5, fontWeight: '700' }}
                 />
                 <YAxis 
                   axisLine={false}
@@ -199,8 +193,8 @@ export default function UtecCharts({ utecs, educationalUnits = [], isDarkMode = 
       </div>
 
       {/* 2. Donut Chart: Distribuição Regional (2 Columns on Desktop) */}
-      <div id="donut-chart-card" className="col-span-1 lg:col-span-2 bg-white dark:bg-[#111827] rounded-xl p-4.5 shadow-xs border border-slate-100 dark:border-slate-800 flex flex-col justify-between">
-        <div className="pb-3 border-b border-slate-100 dark:border-slate-800 mb-3">
+      <div id="donut-chart-card" className="col-span-1 lg:col-span-2 bg-white dark:bg-[#111827] rounded-2xl p-5 shadow-sm border border-slate-200 dark:border-slate-800 flex flex-col justify-between">
+        <div className="pb-3 border-b border-slate-200 dark:border-slate-800 mb-3">
           <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100">Distribuição Regional</h3>
           <p className="text-[11px] text-slate-400 dark:text-slate-400 font-medium font-sans">Adesão de estudantes por macrorregional</p>
         </div>
@@ -242,7 +236,7 @@ export default function UtecCharts({ utecs, educationalUnits = [], isDarkMode = 
             {/* Centered Total / Indicator */}
             <div className={`absolute inset-0 flex flex-col items-center justify-center pointer-events-none mt-[-4px] transition-all duration-200 origin-center ${activeDonutIndex !== null ? 'opacity-0 scale-90' : 'opacity-100 scale-100'}`}>
               <span className="text-[8px] font-bold text-slate-400 dark:text-slate-500 tracking-wider uppercase">ESTUDANTES</span>
-              <span className="text-lg font-black text-slate-800 dark:text-slate-100 tracking-tight leading-none">
+              <span className="text-lg font-semibold text-slate-800 dark:text-slate-100 tracking-tight leading-none">
                 {totalAllStudents >= 1000 ? `${(totalAllStudents / 1000).toFixed(1)}k` : totalAllStudents}
               </span>
               <span className="text-[8px] font-bold text-emerald-500 bg-emerald-50 dark:bg-emerald-950/40 px-1 py-0.25 mt-0.5 rounded-full">
@@ -269,7 +263,7 @@ export default function UtecCharts({ utecs, educationalUnits = [], isDarkMode = 
                     <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: color }} />
                     <span className="text-xs font-semibold text-slate-600 dark:text-slate-400 truncate">{item.name}</span>
                   </div>
-                  <span className="text-xs font-black text-slate-700 dark:text-slate-300 font-mono ml-1.5 flex-shrink-0">
+                  <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 font-mono ml-1.5 flex-shrink-0">
                     {pct}%
                   </span>
                 </div>
