@@ -42,6 +42,7 @@ export interface UtecMetric {
 
 export interface EducationalUnit {
   inep_escola: string;
+  id_unidade?: string;
   id_utec_suporte: string;
   rpa_escola: string;
   endereco: string;
@@ -66,7 +67,7 @@ export interface KpiCard {
   borderColor: string;
 }
 
-export type ActiveTab = 'Dashboards' | 'Diário' | 'Informações' | 'Config';
+export type ActiveTab = 'Dashboards' | 'Clubes Robótica' | 'Diário' | 'Informações' | 'Config';
 export type TableTab = 'Todas Unidades' | 'Lista Detalhada';
 
 // Struct of record/registro in Multiplier's Diary
@@ -117,4 +118,19 @@ export interface DiaryRecord {
   status?: string;
   protocolo?: string;
   grupo?: string;
+}
+
+export interface RoboticsClub {
+  id_clube: string;
+  id_utec: string;
+  id_unidade: string;
+  nome_clube: string;
+  modalidade_clube: string;
+  qnt_alunos_clube: number;
+  qnt_alunos_masculino: number;
+  qnt_alunos_feminino: number;
+  multiplicador_clube: string;
+  estagiario_clube: string;
+  dias_clube: string;
+  horario_clube: string;
 }

@@ -35,7 +35,8 @@ import UtecTable from './components/UtecTable';
 import UtecInfoPage from './components/UtecInfoPage';
 import EducationalUnitsDashboard from './components/EducationalUnitsDashboard';
 import MultiplierDiary from './components/MultiplierDiary';
-import { UtecMetric, ActiveTab, EducationalUnit } from './types';
+import RoboticsClubsDashboard from './components/RoboticsClubsDashboard';
+import { UtecMetric, ActiveTab, EducationalUnit, RoboticsClub } from './types';
 import { INITIAL_UTECS, INITIAL_EDUCATIONAL_UNITS } from './data';
 
 // Helper to map spreadsheet groups to our supported UTEC IDs & Names dynamically
@@ -183,6 +184,12 @@ const normalizeUtecId = (id: string | number): string => {
   if (found) return found.id;
 
   return str.toLowerCase();
+};
+
+const normalizeSchoolId = (id: any): string => {
+  const str = String(id || "").trim();
+  if (!str) return "";
+  return str.replace(/[\.,]0+$/, "");
 };
 
 const matchUtecRobustly = (groupStr: string, rowUtecIdRaw: any, dynamicUtecLookup: { id: string, name: string }[]) => {
@@ -397,7 +404,7 @@ export default function App() {
   };
 
   // Dynamic selector for UTECs and educational units derived from Sheets Database
-  const [dynamicUtecs, dynamicEducationalUnits] = useMemo(() => {
+  const [dynamicUtecs, dynamicEducationalUnits, dynamicRoboticsClubs] = useMemo(() => {
     const rawRegional = getTable(sheetsDatabase, ["regional", "regionais"]);
     const rawRpa = getTable(sheetsDatabase, ["rpa", "rpas"]);
     const rawUtecs = getTable(sheetsDatabase, ["utecs", "utec", "cadastro_utecs"]);
@@ -412,7 +419,7 @@ export default function App() {
     const rawFuncionarioUnidades = getTable(sheetsDatabase, ["funcionario_unidades", "funcionarios_escolas"]);
 
     if (rawUtecs.length === 0) {
-      return [[], []];
+      return [[], [], []];
     }
 
     const regionalMap = new Map<string, string>();
@@ -450,7 +457,7 @@ export default function App() {
 
     const schoolAddressMap = new Map<string, string>();
     rawEnderecoUnidades.forEach(addr => {
-      const idUnidade = String(getRowVal(addr, ["id_unidade", "unidade_id", "id_endereco"])).trim();
+      const idUnidade = normalizeSchoolId(getRowVal(addr, ["id_unidade", "unidade_id", "id_endereco"]));
       const text = String(getRowVal(addr, ["endereco_unidade", "endereco", "endereco_unid"])).trim();
       const bairro = String(getRowVal(addr, ["bairro_unidade", "bairro"])).trim();
       const cep = String(getRowVal(addr, ["cep_unidade", "cep"])).trim();
@@ -461,7 +468,7 @@ export default function App() {
     const schoolLabs = new Map<string, number>();
     const utecLabs = new Map<string, number>();
     rawLaboratoriosLct.forEach(lab => {
-      const schoolId = String(getRowVal(lab, ["id_unidade", "unidade_id"])).trim();
+      const schoolId = normalizeSchoolId(getRowVal(lab, ["id_unidade", "unidade_id"]));
       const utecId = normalizeUtecId(getRowVal(lab, ["id_utec", "utec_id"]));
       if (schoolId) schoolLabs.set(schoolId, (schoolLabs.get(schoolId) || 0) + 1);
       if (utecId) utecLabs.set(utecId, (utecLabs.get(utecId) || 0) + 1);
@@ -469,21 +476,47 @@ export default function App() {
 
     const schoolRob = new Map<string, number>();
     const utecRob = new Map<string, number>();
-    rawClubesRobotica.forEach(clube => {
-      const schoolId = String(getRowVal(clube, ["id_unidade", "unidade_id"])).trim();
-      const utecId = normalizeUtecId(getRowVal(clube, ["id_utec", "utec_id"]));
-      const status = String(getRowVal(clube, ["status", "situacao"])).toLowerCase();
-      const isActive = !status || status.includes("ativ") || status.includes("funcionando") || status === "sim" || status === "ok";
-      if (isActive) {
-        if (schoolId) schoolRob.set(schoolId, (schoolRob.get(schoolId) || 0) + 1);
-        if (utecId) utecRob.set(utecId, (utecRob.get(utecId) || 0) + 1);
+    const mappedRoboticsClubs: RoboticsClub[] = rawClubesRobotica.map(clube => {
+      const idClube = String(getRowVal(clube, ["id_clube", "id"])).trim();
+      const idUtec = normalizeUtecId(getRowVal(clube, ["id_utec", "utec_id"]));
+      const idUnidade = normalizeSchoolId(getRowVal(clube, ["id_unidade", "unidade_id", "id_escola"]));
+      const nomeClube = String(getRowVal(clube, ["nome_clube", "nome"])).trim();
+      const modalidadeClube = String(getRowVal(clube, ["modalidade_clube", "modalidade"])).trim();
+      const qntAlunosClube = parseInt(getRowVal(clube, ["qnt_alunos_clube", "qnt_alunos", "quantidade_alunos", "alunos"]), 10) || 0;
+      const qntAlunosMasculino = parseInt(getRowVal(clube, ["qnt_alunos_masculino", "quant_alunos_masculino", "alunos_masculino", "masculino"]), 10) || 0;
+      const qntAlunosFeminino = parseInt(getRowVal(clube, ["qnt_alunos_feminino", "quant_alunos_feminino", "alunos_feminino", "feminino"]), 10) || 0;
+      const multiplicadorClube = String(getRowVal(clube, ["multiplicador_clube", "multiplicador"])).trim();
+      const estagiarioClube = String(getRowVal(clube, ["estagiario_clube", "estagiario"])).trim();
+      const diasClube = String(getRowVal(clube, ["dias_clube", "dias"])).trim();
+      const horarioClube = String(getRowVal(clube, ["horario_clube", "horario"])).trim();
+
+      if (idUnidade) {
+        schoolRob.set(idUnidade, (schoolRob.get(idUnidade) || 0) + 1);
       }
+      if (idUtec) {
+        utecRob.set(idUtec, (utecRob.get(idUtec) || 0) + 1);
+      }
+
+      return {
+        id_clube: idClube,
+        id_utec: idUtec,
+        id_unidade: idUnidade,
+        nome_clube: nomeClube,
+        modalidade_clube: modalidadeClube,
+        qnt_alunos_clube: qntAlunosClube,
+        qnt_alunos_masculino: qntAlunosMasculino,
+        qnt_alunos_feminino: qntAlunosFeminino,
+        multiplicador_clube: multiplicadorClube,
+        estagiario_clube: estagiarioClube,
+        dias_clube: diasClube,
+        horario_clube: horarioClube
+      };
     });
 
     const schoolCinema = new Map<string, number>();
     const utecCinema = new Map<string, number>();
     rawClubesCinema.forEach(clube => {
-      const schoolId = String(getRowVal(clube, ["id_unidade", "unidade_id"])).trim();
+      const schoolId = normalizeSchoolId(getRowVal(clube, ["id_unidade", "unidade_id"]));
       const utecId = normalizeUtecId(getRowVal(clube, ["id_utec", "utec_id"]));
       const status = String(getRowVal(clube, ["status_clube_cinema", "status", "situacao"])).toLowerCase();
       const isActive = !status || status.includes("ativ") || status.includes("funcionando") || status === "sim" || status === "ok";
@@ -511,7 +544,7 @@ export default function App() {
 
     const schoolGestores = new Map<string, string>();
     rawFuncionarioUnidades.forEach(func => {
-      const schoolId = String(getRowVal(func, ["id_unidade", "unidade_id"])).trim();
+      const schoolId = normalizeSchoolId(getRowVal(func, ["id_unidade", "unidade_id"]));
       const name = String(getRowVal(func, ["nome_funcionario_unidade", "nome"])).trim();
       if (schoolId && name) {
         schoolGestores.set(schoolId, name);
@@ -520,7 +553,7 @@ export default function App() {
 
     const rawMappedEducationalUnits: EducationalUnit[] = rawUnidadesAtendidas
       .filter(unit => {
-        const schoolId = String(getRowVal(unit, ["id_unidade", "id"])).trim();
+        const schoolId = normalizeSchoolId(getRowVal(unit, ["id_unidade", "id"]));
         const inep = String(getRowVal(unit, ["codigo_inep_unidade", "codigo_inep", "inep"])).trim();
         const nome = String(getRowVal(unit, ["nome_unidade", "nome"])).trim();
         if (!schoolId && !inep && !nome) return false;
@@ -528,7 +561,7 @@ export default function App() {
         return true;
       })
       .map((unit, idx) => {
-      const schoolId = String(getRowVal(unit, ["id_unidade", "id"])).trim();
+      const schoolId = normalizeSchoolId(getRowVal(unit, ["id_unidade", "id"]));
       const inep = String(getRowVal(unit, ["codigo_inep_unidade", "codigo_inep", "inep"])).trim();
       const utecIdRaw = String(getRowVal(unit, ["id_utec", "utec_id"])).trim();
       const utecId = utecIdRaw ? normalizeUtecId(utecIdRaw) : "utec-1";
@@ -553,6 +586,7 @@ export default function App() {
 
       return {
         inep_escola: cleanInep,
+        id_unidade: schoolId,
         id_utec_suporte: utecId,
         rpa_escola: rpaName,
         endereco: address,
@@ -692,7 +726,7 @@ export default function App() {
       };
     });
 
-    return [mappedUtecs, mappedEducationalUnits];
+    return [mappedUtecs, mappedEducationalUnits, mappedRoboticsClubs];
   }, [sheetsDatabase]);
 
   // Synchronize with the live spreadsheet database strictly, with no mock fallbacks
@@ -703,6 +737,10 @@ export default function App() {
   const educationalUnits = useMemo(() => {
     return dynamicEducationalUnits && dynamicEducationalUnits.length > 0 ? dynamicEducationalUnits : [];
   }, [dynamicEducationalUnits]);
+
+  const roboticsClubs = useMemo(() => {
+    return dynamicRoboticsClubs && dynamicRoboticsClubs.length > 0 ? dynamicRoboticsClubs : [];
+  }, [dynamicRoboticsClubs]);
 
   const setUtecs = setLocalUtecs;
 
@@ -1292,11 +1330,22 @@ export default function App() {
           />
         );
 
+      case 'Clubes Robótica':
+        return (
+          <RoboticsClubsDashboard
+            roboticsClubs={roboticsClubs}
+            educationalUnits={visibleEducationalUnits}
+            utecs={visibleUtecs}
+            isDarkMode={isDarkMode}
+          />
+        );
+
       case 'Informações':
         return (
           <UtecInfoPage 
             utecs={visibleUtecs}
             educationalUnits={visibleEducationalUnits}
+            roboticsClubs={roboticsClubs}
             isRefreshing={isRefreshing}
             onRefresh={() => fetchDiaryData(true)}
           />

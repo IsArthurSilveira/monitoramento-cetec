@@ -29,12 +29,13 @@ import {
   Trophy
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { UtecMetric, EducationalUnit } from '../types';
+import { UtecMetric, EducationalUnit, RoboticsClub } from '../types';
 import { REGIONALS } from '../data';
 
 interface UtecInfoPageProps {
   utecs: UtecMetric[];
   educationalUnits?: EducationalUnit[];
+  roboticsClubs?: RoboticsClub[];
   isRefreshing?: boolean;
   onRefresh?: () => Promise<void>;
 }
@@ -116,6 +117,7 @@ export function getRegionalByRpa(rpa: string): string {
 export default function UtecInfoPage({ 
   utecs, 
   educationalUnits = [], 
+  roboticsClubs = [],
   isRefreshing = false, 
   onRefresh 
 }: UtecInfoPageProps) {
@@ -148,6 +150,15 @@ export default function UtecInfoPage({
     }
     return utecsToUse.find(u => u.id === selectedUtecId) || null;
   }, [utecsToUse, selectedUtecId]);
+
+  const unitClubs = useMemo(() => {
+    if (!selectedUnit) return [];
+    const unitId = selectedUnit.id_unidade;
+    if (!unitId) return [];
+    return roboticsClubs.filter(clube => {
+      return String(clube.id_unidade).trim() === String(unitId).trim();
+    });
+  }, [selectedUnit, roboticsClubs]);
 
   // Dynamically calculate what RPAs and Regionals each UTEC actually supports based on the school list
   const utecsWithDynamicScopes = useMemo(() => {
@@ -1001,7 +1012,7 @@ export default function UtecInfoPage({
               <div className="pt-3 border-t border-slate-100 dark:border-slate-800 space-y-2">
                 <h5 className="text-[9px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest block">Capacidade e Governança Local</h5>
                 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   <div className="p-2 rounded-lg bg-blue-50/50 dark:bg-blue-950/20 border border-blue-100 dark:border-blue-900/40 text-center">
                     <span className="text-[8px] font-bold text-blue-700 dark:text-blue-400 uppercase">Qtd Estudantes</span>
                     <span className="text-base font-black text-[#1E40AF] dark:text-blue-300 block font-mono">{selectedUnit.qtd_estudantes.toLocaleString('pt-BR')}</span>
@@ -1014,11 +1025,6 @@ export default function UtecInfoPage({
                     }`}>
                       {selectedUnit.por_demanda}
                     </span>
-                  </div>
-
-                  <div className="p-2 rounded-lg bg-indigo-50/50 dark:bg-indigo-950/20 border border-indigo-100 dark:border-indigo-900/40 text-center flex flex-col justify-center">
-                    <span className="text-[8px] font-bold text-indigo-700 dark:text-indigo-400 uppercase block truncate leading-none">Status Monitor</span>
-                    <span className="text-[9px] font-black text-indigo-900 dark:text-indigo-300 block mt-1 uppercase tracking-wider">Ativo</span>
                   </div>
                 </div>
 

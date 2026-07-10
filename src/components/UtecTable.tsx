@@ -343,9 +343,9 @@ export default function UtecTable({ utecs, educationalUnits, diaryRecords = [] }
                 onChange={(e) => setSelectedMovimentacao(e.target.value)}
                 className="w-full text-xs font-bold px-2 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg focus:border-[#1E40AF] focus:outline-hidden transition-all text-slate-600 dark:text-slate-300 cursor-pointer"
               >
-                <option value="Todas">Registros: Todas ({unitsWithUtec.length})</option>
-                <option value="Com">Com Registros ({countCom})</option>
-                <option value="Sem">Sem Registros ({countSem})</option>
+                <option value="Todas">Movimentação: Todas ({unitsWithUtec.length})</option>
+                <option value="Com">Com Movimentação ({countCom})</option>
+                <option value="Sem">Sem Movimentação ({countSem})</option>
               </select>
             </div>
 
@@ -551,7 +551,7 @@ export default function UtecTable({ utecs, educationalUnits, diaryRecords = [] }
                   }`}
                 >
                   <div className="flex items-center justify-center gap-1.5">
-                    REGISTROS
+                    MOVIMENTAÇÃO
                     {sortField === 'movimentacao' ? (
                       sortDirection === 'asc' ? <ArrowUp className="w-4.5 h-4.5 text-blue-800 dark:text-blue-400 stroke-[3.5]" /> : <ArrowDown className="w-4.5 h-4.5 text-blue-800 dark:text-blue-400 stroke-[3.5]" />
                     ) : (
@@ -701,7 +701,7 @@ export default function UtecTable({ utecs, educationalUnits, diaryRecords = [] }
                               : 'bg-rose-50/60 dark:bg-rose-950/10 border-rose-200/55 dark:border-rose-900/40 text-rose-700 dark:text-rose-400 font-medium'
                           }`}>
                             <span className={`w-1.5 h-1.5 rounded-full ${unit.diaryCount > 0 ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`} />
-                            {unit.diaryCount > 0 ? 'Cadastrado' : 'Não Cadastrado'}
+                            {unit.diaryCount > 0 ? 'Ativa' : 'Sem Movimentação'}
                           </span>
                         </div>
                       </td>
