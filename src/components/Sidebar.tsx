@@ -36,12 +36,12 @@ export default function Sidebar({ activeTab, setActiveTab, isOpen, setIsOpen, on
   const isGestor = currentUser?.nivel_acesso === 'gestor';
   const menuItems = [
     { id: 'Dashboards' as ActiveTab, label: 'Dashboards', icon: LayoutDashboard, hasDropdown: false },
-    { id: 'Clubes Robótica' as ActiveTab, label: 'Clubes de Robótica', icon: Cpu, hasDropdown: false },
     { id: 'Diário' as ActiveTab, label: 'Diário do Multiplicador', icon: BookOpen, hasDropdown: false },
     { id: 'Informações' as ActiveTab, label: 'Informações da UTEC', icon: Building, hasDropdown: false },
+    { id: 'Clubes Robótica' as ActiveTab, label: 'Clubes de Robótica', icon: Cpu, hasDropdown: false },
     { id: 'Config' as ActiveTab, label: 'Configurações', icon: Settings, hasDropdown: false },
   ].filter(item => {
-    if (isGestor && item.id === 'Dashboards') return false;
+    if (isGestor && (item.id === 'Dashboards' || item.id === 'Clubes Robótica')) return false;
     return true;
   });
 

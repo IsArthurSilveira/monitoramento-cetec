@@ -1001,8 +1001,8 @@ export default function App() {
   }, [visibleEducationalUnits, visibleUtecs, dashboardRegional, dashboardRpa]);
 
   useEffect(() => {
-    if (isLoggedIn && isGestor && activeTab === 'Dashboards') {
-      setActiveTab('Informações');
+    if (isLoggedIn && isGestor && (activeTab === 'Dashboards' || activeTab === 'Clubes Robótica')) {
+      setActiveTab('Diário');
     }
   }, [isLoggedIn, isGestor, activeTab]);
 

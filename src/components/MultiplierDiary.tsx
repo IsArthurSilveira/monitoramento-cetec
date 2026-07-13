@@ -380,7 +380,7 @@ export default function MultiplierDiary({
 
   const [showIntegrationPanel, setShowIntegrationPanel] = useState(false);
 
-  const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxOe9MujeLIGxM3L5QJVd28NhAgljTnoKGS_jMAjM5K8k7wnlKjtlJkBrmWyPW-0ht2/exec';
+  const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzVXfEUl56QDP940MR_XPtUEISoN9Qq2D2KzWIYOQCxo4VXCvAQa5690PBfJVknORsIgg/exec';
   const API_FEED_URL = '/api/diary';
 
   // Function to fetch the relational database with all 13 sheets (?tabela=todas) in real time
