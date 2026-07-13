@@ -12,7 +12,7 @@ async function startServer() {
   // COLE AQUI A URL GERADA PELA IMPLANTAÇÃO DO SEU GOOGLE APPS SCRIPT (WEB APP)
   // Exemplo: 'https://script.google.com/macros/s/SUA_CHAVE_AQUI/exec'
   // =========================================================================
-  const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzvUAoQISzqv0KCj5lTdW9Hz3BBsa3r4xBF4nayAqjO9mtxdZMZYNx-4-P4IVylxc6A/exec';
+  const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzVXfEUl56QDP940MR_XPtUEISoN9Qq2D2KzWIYOQCxo4VXCvAQa5690PBfJVknORsIgg/exec';
 
   // Memory cache to prevent slow repeated Google Sheets API queries
   const cache = new Map<string, { data: any; timestamp: number }>();
