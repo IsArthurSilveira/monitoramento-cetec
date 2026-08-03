@@ -53,7 +53,7 @@ export default function UtecCharts({ utecs, educationalUnits = [], isDarkMode = 
     'Lab. LCT': utec.lct,
     'Robótica': utec.rob,
     'Cineclube': utec.cine,
-    'Form. Digital': utec.fcd,
+    'Oferta Digital': utec.fcd,
   }));
 
   // 2. Map data for the Donut Chart (Distribuição Regional)
@@ -90,11 +90,32 @@ export default function UtecCharts({ utecs, educationalUnits = [], isDarkMode = 
     'Lab. LCT': '#10B981',     // Green
     'Robótica': '#F59E0B',     // Orange
     'Cineclube': '#EC4899',    // Pink
-    'Form. Digital': '#14B8A6' // Teal
+    'Oferta Digital': '#14B8A6' // Teal
   };
 
   // State to support chart highlighting / animations
   const [activeDonutIndex, setActiveDonutIndex] = useState<number | null>(null);
+
+  // 3. Map data for Horizontal Bar Chart (Quadro Funcional por Cargo)
+  const cargoCounts: { [cargo: string]: number } = {};
+  let totalStaffCount = 0;
+
+  utecs.forEach((utec) => {
+    if (utec.staff && Array.isArray(utec.staff)) {
+      utec.staff.forEach((member) => {
+        let role = member.role ? member.role.trim() : '';
+        if (!role) role = 'Outros / Não informado';
+        cargoCounts[role] = (cargoCounts[role] || 0) + 1;
+        totalStaffCount += 1;
+      });
+    }
+  });
+
+  const cargosData = Object.entries(cargoCounts)
+    .map(([cargo, count]) => ({ cargo, count }))
+    .sort((a, b) => b.count - a.count);
+
+  const cargoPalette = ['#3B82F6', '#8B5CF6', '#10B981', '#F59E0B', '#EC4899', '#14B8A6', '#6366F1', '#64748B'];
 
   // Custom tooltips for elegant dark styling matching high-quality craftsmanship
   const CustomTooltip = ({ active, payload, label }: any) => {
@@ -138,10 +159,31 @@ export default function UtecCharts({ utecs, educationalUnits = [], isDarkMode = 
     return null;
   };
 
+  const CustomCargoTooltip = ({ active, payload }: any) => {
+    if (active && payload && payload.length) {
+      const data = payload[0].payload;
+      const percentage = totalStaffCount > 0 ? ((data.count / totalStaffCount) * 100).toFixed(1) : '0';
+      return (
+        <div id="cargo-tooltip" className="bg-slate-900/95 text-white p-3 rounded-lg border border-slate-800 shadow-xl text-xs backdrop-blur-xs">
+          <p className="font-bold text-slate-300 mb-1">{data.cargo}</p>
+          <div className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-blue-500" />
+            <span className="text-slate-400">Profissionais:</span>
+            <span className="font-extrabold text-white">{data.count}</span>
+          </div>
+          <p className="text-blue-400 font-bold border-t border-slate-700/50 mt-1.5 pt-1 text-right text-[11px]">
+            {percentage}% do quadro
+          </p>
+        </div>
+      );
+    }
+    return null;
+  };
+
   return (
-    <div id="charts-layout-grid" className="grid grid-cols-1 lg:grid-cols-7 gap-4">
-      {/* 1. Bar Chart: Indicadores por UTEC (5 Columns on Desktop) */}
-      <div id="bar-chart-card" className="col-span-1 lg:col-span-5 bg-white dark:bg-[#111827] rounded-2xl p-5 shadow-sm border border-slate-200 dark:border-slate-800 flex flex-col justify-between">
+    <div id="charts-layout-grid" className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+      {/* 1. Bar Chart: Indicadores por UTEC */}
+      <div id="bar-chart-card" className="col-span-1 lg:col-span-12 xl:col-span-5 bg-white dark:bg-[#111827] rounded-2xl p-5 shadow-sm border border-slate-200 dark:border-slate-800 flex flex-col justify-between">
         <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800 mb-2 flex-wrap gap-2">
           <div>
             <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100">Indicadores por UTEC</h3>
@@ -185,15 +227,15 @@ export default function UtecCharts({ utecs, educationalUnits = [], isDarkMode = 
                 <Bar dataKey="Lab. LCT" fill={barColors['Lab. LCT']} radius={[3, 3, 0, 0]} maxBarSize={11} />
                 <Bar dataKey="Robótica" fill={barColors['Robótica']} radius={[3, 3, 0, 0]} maxBarSize={11} />
                 <Bar dataKey="Cineclube" fill={barColors['Cineclube']} radius={[3, 3, 0, 0]} maxBarSize={11} />
-                <Bar dataKey="Form. Digital" fill={barColors['Form. Digital']} radius={[3, 3, 0, 0]} maxBarSize={11} />
+                <Bar dataKey="Oferta Digital" fill={barColors['Oferta Digital']} radius={[3, 3, 0, 0]} maxBarSize={11} />
               </BarChart>
             </ResponsiveContainer>
           </div>
         </div>
       </div>
 
-      {/* 2. Donut Chart: Distribuição Regional (2 Columns on Desktop) */}
-      <div id="donut-chart-card" className="col-span-1 lg:col-span-2 bg-white dark:bg-[#111827] rounded-2xl p-5 shadow-sm border border-slate-200 dark:border-slate-800 flex flex-col justify-between">
+      {/* 2. Donut Chart: Distribuição Regional */}
+      <div id="donut-chart-card" className="col-span-1 lg:col-span-6 xl:col-span-3 bg-white dark:bg-[#111827] rounded-2xl p-5 shadow-sm border border-slate-200 dark:border-slate-800 flex flex-col justify-between">
         <div className="pb-3 border-b border-slate-200 dark:border-slate-800 mb-3">
           <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100">Distribuição Regional</h3>
           <p className="text-[11px] text-slate-400 dark:text-slate-400 font-medium font-sans">Adesão de estudantes por macrorregional</p>
@@ -237,7 +279,7 @@ export default function UtecCharts({ utecs, educationalUnits = [], isDarkMode = 
             <div className={`absolute inset-0 flex flex-col items-center justify-center pointer-events-none mt-[-4px] transition-all duration-200 origin-center ${activeDonutIndex !== null ? 'opacity-0 scale-90' : 'opacity-100 scale-100'}`}>
               <span className="text-[8px] font-bold text-slate-400 dark:text-slate-500 tracking-wider uppercase">ESTUDANTES</span>
               <span className="text-lg font-semibold text-slate-800 dark:text-slate-100 tracking-tight leading-none">
-                {totalAllStudents >= 1000 ? `${(totalAllStudents / 1000).toFixed(1)}k` : totalAllStudents}
+                {totalAllStudents.toLocaleString('pt-BR')}
               </span>
               <span className="text-[8px] font-bold text-emerald-500 bg-emerald-50 dark:bg-emerald-950/40 px-1 py-0.25 mt-0.5 rounded-full">
                 Ativos
@@ -270,6 +312,65 @@ export default function UtecCharts({ utecs, educationalUnits = [], isDarkMode = 
               );
             })}
           </div>
+        </div>
+      </div>
+
+      {/* 3. Horizontal Bar Chart: Quadro Funcional por Cargo */}
+      <div id="cargos-chart-card" className="col-span-1 lg:col-span-6 xl:col-span-4 bg-white dark:bg-[#111827] rounded-2xl p-5 shadow-sm border border-slate-200 dark:border-slate-800 flex flex-col justify-between">
+        <div className="pb-3 border-b border-slate-200 dark:border-slate-800 mb-2 flex items-center justify-between">
+          <div>
+            <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100">Quadro Funcional (Cargos)</h3>
+            <p className="text-[11px] text-slate-400 dark:text-slate-400 font-medium font-sans">Distribuição de profissionais por função nas UTECs</p>
+          </div>
+          <span className="text-[10px] font-extrabold text-[#1E40AF] dark:text-blue-400 bg-blue-50 dark:bg-blue-950/50 px-2 py-0.5 rounded-full font-mono shrink-0">
+            {totalStaffCount} func.
+          </span>
+        </div>
+
+        <div className="w-full h-[215px] relative animate-fade-in flex items-center justify-center pt-1" id="cargos-chart-container">
+          {cargosData.length === 0 ? (
+            <div className="flex items-center justify-center h-full text-xs text-slate-400 font-semibold">
+              Nenhum profissional no filtro selecionado
+            </div>
+          ) : (
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart
+                layout="vertical"
+                data={cargosData.slice(0, 7)}
+                margin={{ top: 2, right: 25, left: 10, bottom: 2 }}
+                barGap={2}
+              >
+                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke={isDarkMode ? '#334155' : '#F1F5F9'} />
+                <XAxis 
+                  type="number" 
+                  axisLine={false} 
+                  tickLine={false} 
+                  allowDecimals={false} 
+                  tick={{ fill: isDarkMode ? '#94A3B8' : '#64748B', fontSize: 9.5, fontWeight: '600' }} 
+                />
+                <YAxis 
+                  type="category" 
+                  dataKey="cargo" 
+                  width={115} 
+                  axisLine={false} 
+                  tickLine={false} 
+                  tickFormatter={(val) => val.length > 17 ? `${val.substring(0, 15)}...` : val}
+                  tick={{ fill: isDarkMode ? '#94A3B8' : '#64748B', fontSize: 9.5, fontWeight: '700' }} 
+                />
+                <Tooltip content={<CustomCargoTooltip />} cursor={{ fill: '#3B82F6', opacity: 0.05 }} />
+                <Bar 
+                  dataKey="count" 
+                  name="Profissionais" 
+                  radius={[0, 4, 4, 0]} 
+                  barSize={12}
+                >
+                  {cargosData.slice(0, 7).map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={cargoPalette[index % cargoPalette.length]} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          )}
         </div>
       </div>
     </div>

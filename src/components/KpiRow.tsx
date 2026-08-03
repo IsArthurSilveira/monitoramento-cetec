@@ -56,7 +56,7 @@ export default function KpiRow({ utecs }: KpiRowProps) {
     },
     {
       title: 'ESTUDANTES',
-      value: finalEstudantes >= 1000 ? `${(finalEstudantes / 1000).toFixed(1)}k` : finalEstudantes.toString(),
+      value: finalEstudantes.toLocaleString('pt-BR'),
       subtext: 'Matrículas ativas',
       textColor: 'text-violet-600 dark:text-violet-400',
       borderColor: 'border-violet-500 dark:border-violet-500',
@@ -107,9 +107,9 @@ export default function KpiRow({ utecs }: KpiRowProps) {
       progressColor: 'bg-pink-600 dark:bg-pink-500',
     },
     {
-      title: 'FORMAÇÃO EFEC. DIG.',
+      title: 'OFERTAS DIGITAIS',
       value: finalFcd.toString(),
-      subtext: 'Formações digitais',
+      subtext: 'Ofertas digitais',
       textColor: 'text-teal-600 dark:text-teal-400',
       borderColor: 'border-teal-500 dark:border-teal-500',
       bgColor: 'bg-teal-50 dark:bg-teal-950/30',

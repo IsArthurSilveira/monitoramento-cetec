@@ -12,7 +12,7 @@ export interface UtecMetric {
   lct: number; // Laboratório LCT
   rob: number; // Robótica
   cine: number; // Cineclube
-  fcd: number; // Formação Cidadã Digital
+  fcd: number; // Oferta Cidadã Digital
   rev: number; // Relevância / Premiados
   coordinator: string;
   email: string;
@@ -67,8 +67,50 @@ export interface KpiCard {
   borderColor: string;
 }
 
-export type ActiveTab = 'Dashboards' | 'Clubes Robótica' | 'Diário' | 'Informações' | 'Config';
+export type ActiveTab = 'Dashboards' | 'Clubes Robótica' | 'Diário' | 'Informações' | 'Afastamentos' | 'Ofertas de Cursos' | 'Config';
 export type TableTab = 'Todas Unidades' | 'Lista Detalhada';
+
+export interface OfertaCursoRecord {
+  id: string;
+  id_utec: string;
+  utecName?: string;
+  regional?: string;
+  rpa?: string;
+  ambiente: string;
+  turma_oferta: string;
+  status_oferta: string;
+  titulo_de_oferta: string;
+  eixo_tematico: string;
+  turno_oferta: string;
+  dias_semana: string;
+  inicio_oferta: string;
+  fim_oferta: string;
+  ch_diaria_oferta: string;
+  ch_total_oferta: string;
+  professor_oferta: string;
+  publico_oferta: string;
+  vagas_oferta: number;
+  matriculados_oferta: number;
+  concluintes_oferta: number;
+  observacao_ementa_oferta: string;
+}
+
+export interface AfastamentoRecord {
+  id: string;
+  nomeProfissional: string;
+  matricula: string;
+  cargo: string;
+  utecId: string;
+  utecName: string;
+  regional: string;
+  rpa: string;
+  tipoAfastamento: 'Licença Médica' | 'Licença Maternidade/Paternidade' | 'Férias' | 'Afastamento Preventivo' | 'Licença Prêmio' | 'Outros';
+  dataInicio: string;
+  dataFim: string;
+  diasAfastado: number;
+  status: 'Ativo' | 'Próximo do Retorno' | 'Concluído';
+  observacao?: string;
+}
 
 // Struct of record/registro in Multiplier's Diary
 export interface DiaryRecord {

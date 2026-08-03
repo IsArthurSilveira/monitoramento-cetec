@@ -19,7 +19,9 @@ import {
   LogOut,
   User,
   BookOpen,
-  Cpu
+  Cpu,
+  UserX,
+  GraduationCap
 } from 'lucide-react';
 import { ActiveTab } from '../types';
 
@@ -39,9 +41,11 @@ export default function Sidebar({ activeTab, setActiveTab, isOpen, setIsOpen, on
     { id: 'Diário' as ActiveTab, label: 'Diário do Multiplicador', icon: BookOpen, hasDropdown: false },
     { id: 'Informações' as ActiveTab, label: 'Informações da UTEC', icon: Building, hasDropdown: false },
     { id: 'Clubes Robótica' as ActiveTab, label: 'Clubes de Robótica', icon: Cpu, hasDropdown: false },
+    { id: 'Afastamentos' as ActiveTab, label: 'Afastamentos', icon: UserX, hasDropdown: false },
+    { id: 'Ofertas de Cursos' as ActiveTab, label: 'Ofertas de Cursos', icon: GraduationCap, hasDropdown: false },
     { id: 'Config' as ActiveTab, label: 'Configurações', icon: Settings, hasDropdown: false },
   ].filter(item => {
-    if (isGestor && (item.id === 'Dashboards' || item.id === 'Clubes Robótica')) return false;
+    if (isGestor && (item.id === 'Dashboards' || item.id === 'Afastamentos')) return false;
     return true;
   });
 

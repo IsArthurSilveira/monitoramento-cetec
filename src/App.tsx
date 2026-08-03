@@ -36,8 +36,12 @@ import UtecInfoPage from './components/UtecInfoPage';
 import EducationalUnitsDashboard from './components/EducationalUnitsDashboard';
 import MultiplierDiary from './components/MultiplierDiary';
 import RoboticsClubsDashboard from './components/RoboticsClubsDashboard';
+import AfastamentosDashboard from './components/AfastamentosDashboard';
+import OfertasCursosDashboard from './components/OfertasCursosDashboard';
 import { UtecMetric, ActiveTab, EducationalUnit, RoboticsClub } from './types';
-import { INITIAL_UTECS, INITIAL_EDUCATIONAL_UNITS } from './data';
+import { INITIAL_UTECS, INITIAL_EDUCATIONAL_UNITS, INITIAL_AFASTAMENTOS } from './data';
+import { parseAfastamentosRecords } from './utils/afastamentosParser';
+import { parseOfertasRecords } from './utils/ofertasParser';
 
 // Helper to map spreadsheet groups to our supported UTEC IDs & Names dynamically
 const mapGroupToUtec = (grupoStr: string) => {
@@ -966,6 +970,13 @@ export default function App() {
     return educationalUnits;
   }, [educationalUnits, isGestor, userUtecId]);
 
+  const visibleRoboticsClubs = useMemo(() => {
+    if (isGestor && userUtecId) {
+      return roboticsClubs.filter(r => normalizeUtecId(r.id_utec) === userUtecId);
+    }
+    return roboticsClubs;
+  }, [roboticsClubs, isGestor, userUtecId]);
+
   const visibleDiaryRecords = useMemo(() => {
     if (isGestor && userUtecId) {
       return diaryRecords.filter(r => normalizeUtecId(r.utecId) === userUtecId);
@@ -973,15 +984,93 @@ export default function App() {
     return diaryRecords;
   }, [diaryRecords, isGestor, userUtecId]);
 
+  const afastamentosRecords = useMemo(() => {
+    const rawAfastamentos = getTable(sheetsDatabase, [
+      "registros_afastamentos",
+      "registro_afastamentos",
+      "afastamentos",
+      "registros_afastamento"
+    ]);
+    const rawQuadroFuncional = getTable(sheetsDatabase, [
+      "funcao_funcionario_utecs",
+      "quadro_funcional_utecs",
+      "quadro_funcional"
+    ]);
+
+    if (rawAfastamentos && rawAfastamentos.length > 0) {
+      return parseAfastamentosRecords(rawAfastamentos, rawQuadroFuncional, utecs);
+    }
+
+    return INITIAL_AFASTAMENTOS;
+  }, [sheetsDatabase, utecs]);
+
+  const visibleAfastamentos = useMemo(() => {
+    if (isGestor && userUtecId) {
+      return afastamentosRecords.filter(a => normalizeUtecId(a.utecId) === userUtecId);
+    }
+    return afastamentosRecords;
+  }, [afastamentosRecords, isGestor, userUtecId]);
+
+  const ofertasRecords = useMemo(() => {
+    const rawOfertas = getTable(sheetsDatabase, [
+      "oferta_cursos",
+      "ofertas_cursos",
+      "ofertas",
+      "oferta_curso",
+      "cursos"
+    ]);
+
+    return parseOfertasRecords(rawOfertas, utecs);
+  }, [sheetsDatabase, utecs]);
+
+  const visibleOfertas = useMemo(() => {
+    if (isGestor && userUtecId) {
+      return ofertasRecords.filter(o => normalizeUtecId(o.id_utec) === userUtecId);
+    }
+    return ofertasRecords;
+  }, [ofertasRecords, isGestor, userUtecId]);
+
+  const dashboardRegionalOptions = useMemo(() => {
+    const set = new Set<string>();
+    visibleUtecs.forEach(u => {
+      if (u.regional) set.add(u.regional.trim());
+    });
+    visibleEducationalUnits.forEach(e => {
+      const parentUtec = visibleUtecs.find(u => normalizeUtecId(u.id) === normalizeUtecId(e.id_utec_suporte));
+      if (parentUtec?.regional) set.add(parentUtec.regional.trim());
+    });
+    return Array.from(set).sort();
+  }, [visibleUtecs, visibleEducationalUnits]);
+
+  const dashboardRpaOptions = useMemo(() => {
+    const set = new Set<string>();
+    visibleUtecs.forEach(u => {
+      if (u.rpaSede) {
+        const val = u.rpaSede.trim();
+        set.add(val.startsWith('RPA') ? val : `RPA ${val}`);
+      }
+    });
+    visibleEducationalUnits.forEach(e => {
+      if (e.rpa_escola) {
+        const val = e.rpa_escola.trim();
+        set.add(val.startsWith('RPA') ? val : `RPA ${val}`);
+      }
+    });
+    return Array.from(set).sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+  }, [visibleUtecs, visibleEducationalUnits]);
+
   const dashboardFilteredUtecs = useMemo(() => {
     return visibleUtecs.filter(u => {
-      const matchesRegional = dashboardRegional === 'Todas' || u.regional === dashboardRegional;
-      // Robust check for RPA code matching: "RPA 1" or "1"
-      const utecRpa = u.rpaSede || "";
+      const uReg = (u.regional || '').trim();
+      const matchesRegional = dashboardRegional === 'Todas' || uReg === dashboardRegional;
+      
+      const utecRpa = (u.rpaSede || '').trim();
+      const formattedRpa = utecRpa.startsWith('RPA') ? utecRpa : `RPA ${utecRpa}`;
       const matchesRpa = dashboardRpa === 'Todas' || 
         utecRpa === dashboardRpa || 
-        `RPA ${utecRpa}` === dashboardRpa || 
+        formattedRpa === dashboardRpa || 
         utecRpa.toUpperCase() === dashboardRpa.toUpperCase();
+        
       return matchesRegional && matchesRpa;
     });
   }, [visibleUtecs, dashboardRegional, dashboardRpa]);
@@ -989,19 +1078,28 @@ export default function App() {
   const dashboardFilteredEducationalUnits = useMemo(() => {
     return visibleEducationalUnits.filter(e => {
       const parentUtec = visibleUtecs.find(u => normalizeUtecId(u.id) === normalizeUtecId(e.id_utec_suporte));
-      if (!parentUtec) return false;
-      const matchesRegional = dashboardRegional === 'Todas' || parentUtec.regional === dashboardRegional;
-      const utecRpa = parentUtec.rpaSede || "";
+      const parentReg = (parentUtec?.regional || '').trim();
+      const matchesRegional = dashboardRegional === 'Todas' || parentReg === dashboardRegional;
+
+      const escoRpa = (e.rpa_escola || '').trim();
+      const escoRpaFormatted = escoRpa.startsWith('RPA') ? escoRpa : `RPA ${escoRpa}`;
+      
+      const utecRpa = (parentUtec?.rpaSede || '').trim();
+      const utecRpaFormatted = utecRpa.startsWith('RPA') ? utecRpa : `RPA ${utecRpa}`;
+
       const matchesRpa = dashboardRpa === 'Todas' || 
+        escoRpa === dashboardRpa || 
+        escoRpaFormatted === dashboardRpa || 
         utecRpa === dashboardRpa || 
-        `RPA ${utecRpa}` === dashboardRpa || 
-        utecRpa.toUpperCase() === dashboardRpa.toUpperCase();
+        utecRpaFormatted === dashboardRpa ||
+        escoRpa.toUpperCase() === dashboardRpa.toUpperCase();
+
       return matchesRegional && matchesRpa;
     });
   }, [visibleEducationalUnits, visibleUtecs, dashboardRegional, dashboardRpa]);
 
   useEffect(() => {
-    if (isLoggedIn && isGestor && (activeTab === 'Dashboards' || activeTab === 'Clubes Robótica')) {
+    if (isLoggedIn && isGestor && (activeTab === 'Dashboards' || activeTab === 'Afastamentos')) {
       setActiveTab('Diário');
     }
   }, [isLoggedIn, isGestor, activeTab]);
@@ -1117,6 +1215,16 @@ export default function App() {
       if (!matched && cleanNum !== "11111111111" && cleanNum !== "22222222222") {
         setLoginError('CPF não cadastrado na aba "acesso" da Planilha.');
         return;
+      }
+
+      const userLevel = matched 
+        ? String(getRowVal(matched, ["nivel_acesso"])).trim().toLowerCase()
+        : (cleanNum === "11111111111" ? "gestor" : "administrador");
+
+      if (userLevel === 'gestor') {
+        setActiveTab('Diário');
+      } else {
+        setActiveTab('Dashboards');
       }
 
       localStorage.setItem('portal-user-cpf', cpfValue);
@@ -1248,7 +1356,7 @@ export default function App() {
               <div className="flex items-center gap-2">
                 <div className="w-2.5 h-2.5 rounded-full bg-[#1E40AF] animate-pulse" />
                 <span className="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wide">
-                  Filtros dos Gráficos e KPIs:
+                  Filtros do Dashboard (KPIs, Gráficos e Unidades):
                 </span>
                 {(dashboardRegional !== 'Todas' || dashboardRpa !== 'Todas') && (
                   <button
@@ -1273,11 +1381,9 @@ export default function App() {
                     className="text-xs font-semibold px-2.5 py-1.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg focus:border-[#1E40AF] focus:outline-hidden text-slate-600 dark:text-slate-300 cursor-pointer min-w-[110px]"
                   >
                     <option value="Todas">Todas</option>
-                    <option value="Regional 1">Regional 1</option>
-                    <option value="Regional 2">Regional 2</option>
-                    <option value="Regional 3">Regional 3</option>
-                    <option value="Regional 4">Regional 4</option>
-                    <option value="Regional 5">Regional 5</option>
+                    {dashboardRegionalOptions.map(reg => (
+                      <option key={reg} value={reg}>{reg}</option>
+                    ))}
                   </select>
                 </div>
 
@@ -1291,12 +1397,9 @@ export default function App() {
                     className="text-xs font-bold px-2.5 py-1.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg focus:border-[#1E40AF] focus:outline-hidden text-slate-600 dark:text-slate-300 cursor-pointer min-w-[100px]"
                   >
                     <option value="Todas">Todas</option>
-                    <option value="RPA 1">RPA 1</option>
-                    <option value="RPA 2">RPA 2</option>
-                    <option value="RPA 3">RPA 3</option>
-                    <option value="RPA 4">RPA 4</option>
-                    <option value="RPA 5">RPA 5</option>
-                    <option value="RPA 6">RPA 6</option>
+                    {dashboardRpaOptions.map(rpa => (
+                      <option key={rpa} value={rpa}>{rpa}</option>
+                    ))}
                   </select>
                 </div>
               </div>
@@ -1310,8 +1413,8 @@ export default function App() {
 
             {/* 3. Interactive Data List & Detailed UTEC Profiles card columns */}
             <UtecTable 
-              utecs={utecs} 
-              educationalUnits={educationalUnits}
+              utecs={dashboardFilteredUtecs} 
+              educationalUnits={dashboardFilteredEducationalUnits}
               diaryRecords={diaryRecords}
             />
           </>
@@ -1333,7 +1436,7 @@ export default function App() {
       case 'Clubes Robótica':
         return (
           <RoboticsClubsDashboard
-            roboticsClubs={roboticsClubs}
+            roboticsClubs={visibleRoboticsClubs}
             educationalUnits={visibleEducationalUnits}
             utecs={visibleUtecs}
             isDarkMode={isDarkMode}
@@ -1345,9 +1448,27 @@ export default function App() {
           <UtecInfoPage 
             utecs={visibleUtecs}
             educationalUnits={visibleEducationalUnits}
-            roboticsClubs={roboticsClubs}
+            roboticsClubs={visibleRoboticsClubs}
             isRefreshing={isRefreshing}
             onRefresh={() => fetchDiaryData(true)}
+          />
+        );
+
+      case 'Afastamentos':
+        return (
+          <AfastamentosDashboard
+            utecs={visibleUtecs}
+            afastamentos={visibleAfastamentos}
+            isDarkMode={isDarkMode}
+          />
+        );
+
+      case 'Ofertas de Cursos':
+        return (
+          <OfertasCursosDashboard
+            utecs={visibleUtecs}
+            ofertas={visibleOfertas}
+            isDarkMode={isDarkMode}
           />
         );
 

@@ -148,7 +148,7 @@ export default function UtecInfoPage({
     if (!selectedUtecId) {
       return utecsToUse[0] || null;
     }
-    return utecsToUse.find(u => u.id === selectedUtecId) || null;
+    return utecsToUse.find(u => u.id === selectedUtecId) || utecsToUse[0] || null;
   }, [utecsToUse, selectedUtecId]);
 
   const unitClubs = useMemo(() => {
@@ -257,6 +257,39 @@ export default function UtecInfoPage({
       );
     });
   }, [schoolsToDisplay, schoolSearchQuery]);
+
+  // Staff breakdown metrics calculation for selected UTEC
+  const staffBreakdown = useMemo(() => {
+    const staff = selectedUtec?.staff || [];
+    let multiplicadores = 0;
+    let tecnologia = 0;
+    let ambos = 0;
+    let outros = 0;
+
+    staff.forEach(s => {
+      const roleStr = (s.role || '').toLowerCase();
+      const hasMult = roleStr.includes('multiplicador') || roleStr.includes('mult');
+      const hasTec = roleStr.includes('tecnologia') || roleStr.includes('tec') || roleStr.includes('tecnológic');
+
+      if (hasMult && hasTec) {
+        ambos++;
+      } else if (hasMult) {
+        multiplicadores++;
+      } else if (hasTec) {
+        tecnologia++;
+      } else {
+        outros++;
+      }
+    });
+
+    return {
+      total: staff.length,
+      multiplicadores,
+      tecnologia,
+      ambos,
+      outros
+    };
+  }, [selectedUtec]);
 
   const handleSelectUtec = (utec: UtecMetric) => {
     setSelectedUtecId(utec.id);
@@ -525,9 +558,96 @@ export default function UtecInfoPage({
                         <Layers className="w-5 h-5" />
                       </div>
                       <div>
-                        <span className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase block tracking-wider leading-none">Formação Cidadã</span>
+                        <span className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase block tracking-wider leading-none">Oferta Cidadã</span>
                         <span className="text-lg font-black text-teal-700 dark:text-teal-450 font-mono mt-1 block leading-none">{selectedUtec.fcd}</span>
-                        <span className="text-[9.5px] text-slate-400 dark:text-slate-500 font-medium font-sans mt-0.5 block">Cursos ativos</span>
+                        <span className="text-[9.5px] text-slate-400 dark:text-slate-500 font-medium font-sans mt-0.5 block">Ofertas ativas</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Sub-section for Staff Quantities Breakdown Indicators */}
+                  <div className="pt-3 border-t border-slate-200/60 dark:border-slate-800">
+                    <div className="flex items-center justify-between mb-2.5">
+                      <span className="text-[10px] font-black text-slate-600 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+                        <Users className="w-3.5 h-3.5 text-[#1E40AF] dark:text-blue-400" />
+                        Quadro de Funcionários ({staffBreakdown.total} Integrantes)
+                      </span>
+                      <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 font-mono">
+                        Métricas por Perfil Docente
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                      {/* 1. Professores Multiplicadores Apenas */}
+                      <div className="p-3 bg-sky-50/50 dark:bg-sky-950/15 border border-sky-100/70 dark:border-sky-900/40 rounded-xl flex items-center gap-3 shadow-2xs">
+                        <div className="w-9 h-9 rounded-lg bg-sky-100 dark:bg-sky-900/35 text-sky-700 dark:text-sky-300 flex items-center justify-center flex-shrink-0 shadow-2xs">
+                          <GraduationCap className="w-4.5 h-4.5" />
+                        </div>
+                        <div className="min-w-0">
+                          <span className="text-[8.5px] font-black text-slate-400 dark:text-slate-500 uppercase block tracking-wider leading-none truncate" title="Prof. Multiplicadores">
+                            Prof. Multiplicadores
+                          </span>
+                          <span className="text-base font-black text-sky-800 dark:text-sky-300 font-mono mt-0.5 block leading-none">
+                            {staffBreakdown.multiplicadores}
+                          </span>
+                          <span className="text-[8.5px] text-slate-400 dark:text-slate-500 font-medium font-sans mt-0.5 block truncate">
+                            Apenas Multiplicador
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* 2. Professores de Tecnologia Apenas */}
+                      <div className="p-3 bg-purple-50/50 dark:bg-purple-950/15 border border-purple-100/70 dark:border-purple-900/40 rounded-xl flex items-center gap-3 shadow-2xs">
+                        <div className="w-9 h-9 rounded-lg bg-purple-100 dark:bg-purple-900/35 text-purple-700 dark:text-purple-300 flex items-center justify-center flex-shrink-0 shadow-2xs">
+                          <Cpu className="w-4.5 h-4.5" />
+                        </div>
+                        <div className="min-w-0">
+                          <span className="text-[8.5px] font-black text-slate-400 dark:text-slate-500 uppercase block tracking-wider leading-none truncate" title="Prof. de Tecnologia">
+                            Prof. de Tecnologia
+                          </span>
+                          <span className="text-base font-black text-purple-800 dark:text-purple-300 font-mono mt-0.5 block leading-none">
+                            {staffBreakdown.tecnologia}
+                          </span>
+                          <span className="text-[8.5px] text-slate-400 dark:text-slate-500 font-medium font-sans mt-0.5 block truncate">
+                            Apenas Tecnologia
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* 3. Multiplicadores e Tecnologia (Ambos) */}
+                      <div className="p-3 bg-emerald-50/50 dark:bg-emerald-950/15 border border-emerald-100/70 dark:border-emerald-900/40 rounded-xl flex items-center gap-3 shadow-2xs">
+                        <div className="w-9 h-9 rounded-lg bg-emerald-100 dark:bg-emerald-900/35 text-emerald-700 dark:text-emerald-300 flex items-center justify-center flex-shrink-0 shadow-2xs">
+                          <Sparkles className="w-4.5 h-4.5" />
+                        </div>
+                        <div className="min-w-0">
+                          <span className="text-[8.5px] font-black text-slate-400 dark:text-slate-500 uppercase block tracking-wider leading-none truncate" title="Multiplicador & Tecnologia">
+                            Multiplicador & Tec.
+                          </span>
+                          <span className="text-base font-black text-emerald-800 dark:text-emerald-300 font-mono mt-0.5 block leading-none">
+                            {staffBreakdown.ambos}
+                          </span>
+                          <span className="text-[8.5px] text-slate-400 dark:text-slate-500 font-medium font-sans mt-0.5 block truncate">
+                            Ambas as Funções
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* 4. Outros Funcionários */}
+                      <div className="p-3 bg-slate-50/80 dark:bg-slate-900/40 border border-slate-200/80 dark:border-slate-800 rounded-xl flex items-center gap-3 shadow-2xs">
+                        <div className="w-9 h-9 rounded-lg bg-slate-200/70 dark:bg-slate-800 text-slate-700 dark:text-slate-300 flex items-center justify-center flex-shrink-0 shadow-2xs">
+                          <Briefcase className="w-4.5 h-4.5" />
+                        </div>
+                        <div className="min-w-0">
+                          <span className="text-[8.5px] font-black text-slate-400 dark:text-slate-500 uppercase block tracking-wider leading-none truncate" title="Outros Funcionários">
+                            Outros Funcionários
+                          </span>
+                          <span className="text-base font-black text-slate-800 dark:text-slate-200 font-mono mt-0.5 block leading-none">
+                            {staffBreakdown.outros}
+                          </span>
+                          <span className="text-[8.5px] text-slate-400 dark:text-slate-500 font-medium font-sans mt-0.5 block truncate">
+                            Gestão & Demais
+                          </span>
+                        </div>
                       </div>
                     </div>
                   </div>

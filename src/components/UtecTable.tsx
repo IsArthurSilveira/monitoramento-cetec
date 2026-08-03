@@ -39,7 +39,7 @@ export default function UtecTable({ utecs, educationalUnits, diaryRecords = [] }
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
-  const unitsList = educationalUnits && educationalUnits.length > 0 ? educationalUnits : INITIAL_EDUCATIONAL_UNITS;
+  const unitsList = educationalUnits !== undefined ? educationalUnits : INITIAL_EDUCATIONAL_UNITS;
 
   // Map each educational unit to its supporting UTEC's regional, name, and diary interactions
   const unitsWithUtec = useMemo(() => {

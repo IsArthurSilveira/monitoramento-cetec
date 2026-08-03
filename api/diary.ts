@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 // URL do Apps Script do Google Sheets
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzvUAoQISzqv0KCj5lTdW9Hz3BBsa3r4xBF4nayAqjO9mtxdZMZYNx-4-P4IVylxc6A/exec';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzVXfEUl56QDP940MR_XPtUEISoN9Qq2D2KzWIYOQCxo4VXCvAQa5690PBfJVknORsIgg/exec';
 
 // Cache em memória (efêmero por instância de Serverless Function)
 const cache = new Map<string, { data: any; timestamp: number }>();

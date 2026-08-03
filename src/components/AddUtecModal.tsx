@@ -292,7 +292,7 @@ export default function AddUtecModal({ isOpen, onClose, onAdd, nextUtecNum }: Ad
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[10px] font-semibold text-slate-500 block uppercase text-center">Formações</label>
+                    <label className="text-[10px] font-semibold text-slate-500 block uppercase text-center">Ofertas</label>
                     <input
                       id="add-input-fcd"
                       type="number"
